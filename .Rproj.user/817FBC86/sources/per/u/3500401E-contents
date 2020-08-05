@@ -1,0 +1,50 @@
+data_full_cleaned%>%
+  filter(dx.event == "Epilepsy")%>%
+  mutate(rec.dicho = ifelse(n.tot.recidives > 0 | is.na(n.tot.recidives), "relapse", "sz free"))%>%
+  group_by(dx.epi, type.epi.final, rec.dicho)%>%
+  summarise(N = n())%>%
+  spread(rec.dicho, N)%>%
+  mutate(tot = relapse + `sz free`)
+
+
+to_export <- data_full_cleaned%>%
+  filter(dx.event == "Epilepsy")%>%
+  mutate(rec.dicho = ifelse(n.tot.recidives > 0 | is.na(n.tot.recidives), "relapse", "sz free"))%>%
+  filter(rec.dicho == "relapse")%>%
+  select(code.pat, date.1st.cs.su, date.1st.1st.sz, date.1st.EEG, date.CT, date.IRM, dx.epi, type.epi.final)%>%
+  rename(code_patient = code.pat,
+         date_premiere_consult_urg = date.1st.cs.su,
+         date_vraie_premiere_crise = date.1st.1st.sz,
+         date_premier_EEG = date.1st.EEG,
+         diagnostic_1 = dx.epi,
+         diagnostic_2 = type.epi.final)%>%
+  mutate(motif_consultation = NA,
+         si_crise_specification = NA)
+
+library(writexl)
+write_xlsx(to_export, "check_relapses_Pia.xlsx")
+
+
+data_to_add_name <- read_excel("check_relapses_Pia_to_name.xlsx")
+data_to_add_name <- data_to_add_name%>%rename(code.pat = code_patient)
+
+head(data_to_add_name)
+dim(data_to_add_name)
+
+data_w_names <- add_names(data_to_add_name)
+write_xlsx(data_w_names, "data_Pia_with_names.xlsx")
+
+
+temp <- data_tree_exams%>%
+  filter(EEG.result_resume == "spikes",
+         les.epi == "no epileptogenic lesion",
+         dx.dicho == "non-epileptic")%>%
+  left_join(data_full_cleaned, by = "code.pat")%>%
+  select(code.pat, dx.event.x, type.epi.final, date.1st.cs.epi, date.1st.EEG)%>%
+  filter(dx.event.x != "Acute symptomatic seizure")
+
+
+  
+  group_by(EEG.result_resume, les.epi,dx.dicho)%>%
+  summarise(N = n())%>%
+  filter(les.epi == "no epileptogenic lesion" & EEG.result_resume == "spikes")

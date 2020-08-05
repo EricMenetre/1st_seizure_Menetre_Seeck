@@ -1,24 +1,24 @@
 {
     "collab_server" : "",
     "contents" : "",
-    "created" : 1589465679372.000,
+    "created" : 1589967728258.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "0",
-    "id" : "452B7B3D",
-    "lastKnownWriteTime" : 1589484837,
-    "last_content_update" : 1589484837616,
-    "path" : "~/Analyses HUG sept 19/First_seizure/First_seizure/new_analyses/sanity_check.R",
+    "hash" : "2705632111",
+    "id" : "B63C6694",
+    "lastKnownWriteTime" : 1588233016,
+    "last_content_update" : 1588233016,
+    "path" : "D:/add_remove_names.R",
     "project_path" : null,
     "properties" : {
-        "cursorPosition" : "13,24",
+        "cursorPosition" : "12,29",
         "scrollLine" : "0"
     },
     "read_only" : false,
     "read_only_alternatives" : [
     ],
-    "relative_order" : 5,
+    "relative_order" : 7,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_source"

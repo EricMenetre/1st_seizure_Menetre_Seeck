@@ -4,7 +4,7 @@
 "0","##################################################################"
 "0",""
 "0","library(readxl)"
-"0","data_full_cleaned <- read_xlsx(""data_full_cleaned_ok.xlsx"")"
+"0","data_full_cleaned <- read_xlsx(""data_full_cleaned.xlsx"")"
 "0",""
 "0",""
 "0","data_full_cleaned$date.1st.EEG <- as_date(data_full_cleaned$date.1st.EEG)"

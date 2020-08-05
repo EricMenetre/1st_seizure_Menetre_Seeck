@@ -1,0 +1,159 @@
+---
+title: "Test survival analysis"
+author: "Eric Ménétré"
+date: "24/07/2020"
+output: html_document
+---
+```{r, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(survival)
+library(survminer)
+
+setwd("C:/Users/EricM/ownCloud/HUG/First seizure/dev/RDV untié d'appuis méthodo/1st_seizure_Menetre_Seeck")
+data_full_cleaned <- read_xlsx("data_full_cleaned.xlsx")
+
+```
+
+## Interpretation of the graphical results
+
+The cox model shows that the non-epileptic patients are diagnosed later than the epileptic patients. This finding could be explained by the fact that when an epilepsy is suspected, rule ot this diagnosis might take some time. Moreover, since generally epilepsy mimicking pathologies are less life threatning than epilepsy (cardiovascular and vaso-vagal syncopes, psychogenic origins, ...), reaching a diagnosis might not be so urgent. When including the relapse information, patients who relapse tend to recieve their diagnosis later than those who don't. This makes sense since difficult to diagnose patients are treated later than easy patients, letting them time to relapse.
+These results need to be taken cousciously since the proportional hazard assumption is violated in this model for the diagnosis information. HOW TO FIX IT ? 
+
+# Data importation and transformation
+delay was calculated, missing values were excluded, the unknown diagnosis were classified as censored, diagnoses were dichotomize in epilepsy, not epilepsy, only the positive delays were taken into account, relapses were dichotomize in relapses or no relapse. For epileptic patients only relapses under treatment were considered as relapses. Data were transformed in factor and in numerical data. Only delays under 2 years (730 days) were used.
+
+```{r echo=FALSE}
+
+data_surv <- data_full_cleaned%>%
+  select(code.pat, date.1st.cs.su, date.dx.final, dx.event, n.tot.recidives, motif_relapse, detail_relapse)%>%
+  filter(!is.na(date.1st.cs.su), !is.na(date.dx.final))%>%
+  mutate(date.1st.cs.su = as_date(date.1st.cs.su),
+         date.dx.final  = as_date(date.dx.final),
+         censored = ifelse(is.na(dx.event) | dx.event == "Unknown", "censored", "diagnosed"),
+         dx.dicho = ifelse(dx.event == "Epilepsy", "epilepsy", "other"),
+         delay_dx_final = date.dx.final-date.1st.cs.su)%>%
+  filter(delay_dx_final >= 0)%>%
+  select(-date.dx.final, -date.1st.cs.su, -dx.event)%>%
+  mutate(detail_relapse = ifelse(is.na(detail_relapse), "other", detail_relapse),
+         relapses = case_when(n.tot.recidives == 0 ~ "no relapse",
+                              detail_relapse == "ttt ok et bonne compliance" | detail_relapse == "pas de ttt" | detail_relapse == "ttt ok taux infra ou ttt inadequat" ~ "relapse",
+                              dx.dicho == "epilepsy" & n.tot.recidives > 0 & detail_relapse != "ttt ok et bonne compliance" ~ "no relapse",
+                              TRUE ~ "relapse"))%>%
+  select(-n.tot.recidives, -motif_relapse, -detail_relapse)%>%
+  mutate(censored = as.factor(censored),
+         dx.dicho = as.factor(dx.dicho),
+         relapses = as.factor(relapses),
+         delay_dx_final = as.numeric(delay_dx_final))%>%
+  mutate(censored = as.numeric(censored),
+         dx.dicho = as.numeric(dx.dicho),
+         relapses = as.numeric(relapses))%>%
+  filter(delay_dx_final <= 730)
+```
+
+# Survival plots
+
+## Delay to the final diagnosis between epileptic and non-epileptic patients
+
+This plot looks at the differences in **delay to reach the final diagnosis** between **epileptic** and **non-epileptic patients**.
+
+Graphically, it seems that non-epileptic patients tend to reach their diagnosis later than epileptic patients --> Probably because the patients comes to the ER, where a first seizure is suspected and it takes time to rule out epilepsy. Another explanation could be that since the epilepsy-like event are generally less life threatning, it is less urgent to investigate (often syncopes, vasovagal malaises, psychogenic, ...).
+
+```{r, echo=FALSE}
+fit <- survfit(Surv(delay_dx_final, censored) ~ dx.dicho, data = data_surv)
+print(fit)
+
+ggsurvplot(
+  fit,                     # survfit object with calculated statistics.
+  pval = TRUE,
+  conf.int = TRUE,         # show confidence intervals for 
+  # point estimaes of survival curves.
+  conf.int.style = "step",  # customize style of confidence intervals
+  xlab = "Time in days",   # customize X axis label.
+  ggtheme = theme_light(), # customize plot and risk table with a theme.
+  # in legend of risk table.
+  ncensor.plot = TRUE,      # plot the number of censored subjects at time t
+  surv.median.line = "hv",  # add the median survival pointer.
+  legend.labs = 
+    c("Epilepsy", "Not epilepsy"),    # change legend labels.
+  palette = 
+    c("#E7B800", "#2E9FDF"), # custom color palettes.
+  fun = "event"
+  )
+
+surv_diff <- survdiff(Surv(delay_dx_final, censored) ~ dx.dicho + relapses, data = data_surv)
+surv_diff
+```
+
+## Delay to the final diagnosis between epileptic and non-epileptic patients and adding the relapses information
+
+Same model as before but adding the **relapses information**.
+
+By adding the relapse information, it appears that the patients who relapse tend to recieve their diagnosis later than those who don't. The effect mignt be explained by the difficulty to diagnose some patients. Patients who are hard to diagnose have more relapses until we are sure about the diagnosis and start a treatment. To see the real effect of the delay, it might be more appropriate to use another variable, such as the **delay until the first consultation**, in order to avoid the effect of difficulty to diagnose patients.
+
+
+```{r echo=FALSE}
+fit_2 <- survfit(Surv(delay_dx_final, censored) ~ dx.dicho + relapses, data = data_surv)
+
+ggsurv <- ggsurvplot(fit_2, fun = "event", conf.int = TRUE,
+                     ggtheme = theme_bw(),
+                     legend.labs = c("epi - sz free", "epi - relapse", "non-epi - no relapse", "non-epi - relapse"))
+ggsurv$plot +theme_bw() + 
+  theme (legend.position = "right")+
+  facet_grid(dx.dicho ~ 1)
+
+
+```
+
+# Cox survival analysis
+
+Cox regression investigating the effect of the diagnosis on the delay until reaching the final diagnosis. Do epileptic patients are diagnosed significantly more or less rapidly than non-epileptic patients. By being not epileptic, the chances to reach the final diagnosis are reduced by 27.18%.
+
+```{r}
+
+cox_model <- coxph(Surv(delay_dx_final, censored) ~ dx.dicho + relapses, data_surv)
+summary(cox_model)
+
+ggsurvplot(survfit(cox_model_2),
+           ggtheme = theme_minimal(),
+           data = data_surv)
+
+dx.dicho <- c("epilepsy", "not epilepsy", "epilepsy", "not epilepsy")
+relapses <- c("no relapse", "no relapse", "relapse", "relapse")
+new_df <- data.frame(dx.dicho, relapses) 
+
+ggsurvplot(survfit(cox_model, newdata = new_df),
+           ggtheme = theme_minimal(),
+           data = data_surv,
+           legend.labs=c("epilepsy - no relapse", 
+                         "not epilepsy - no relapse",
+                         "epilepsy - relapse",
+                         "not epilepsy - no relapse"),
+           fun= "event",
+           conf.int = F)
+
+```
+
+Assumptions of the model:
+* proportional hazards assumption: this postulates that the residuals are independant of the time --> **Assumption violated** for the diagnosis (link with the censoring ?). HOW TO FIX IT ??
+
+* Influencial observations: examination of the deviance residuals or the dfbeta values
+
+```{r}
+
+# Proportional hazards assumption
+test.ph <- cox.zph(cox_model_2)
+test.ph # Assumption violated
+
+ggcoxzph(test.ph) # Assuption violated 
+
+# Influential observations
+ggcoxdiagnostics(cox_model_2, type = , linear.predictions = TRUE)
+ggcoxdiagnostics(cox_model_2, type = "dfbeta", linear.predictions = TRUE) # OK --> magnitudes of the dfbetas
+ggcoxdiagnostics(cox_model_2, type = "deviance", linear.predictions = TRUE)
+
+```
+
+
+

@@ -1,0 +1,26 @@
+# Addnames
+
+add_names <- function(data){
+  library(readxl)
+  name_code_pat <- read_excel("D:/name_code_pat_open.xlsx")
+  
+  library(dplyr)
+  data_names <- data%>%
+    left_join(name_code_pat, by = "code.pat")
+  
+  check <- sum(is.na(data_names$nom))
+  if (check == 0) {
+    print("Data check is ok")
+  } else if (check > 0){
+    print("Warning, the importation failed, check the code.pat column")
+  }
+  return(data_names)
+}
+
+remove_names <- function(data) {
+  data$nom <- NULL
+  data$prenom <- NULL
+  data$date.naissance <- NULL
+  data_anonymized <<- data
+}
+

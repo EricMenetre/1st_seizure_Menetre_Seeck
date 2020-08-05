@@ -67,7 +67,7 @@ Attachement du package : ‘randomForest’
 
 "
 "0","library(ROCR)"
-"0","library(NPL)"
+"0","library(NPL) # from https://github.com/EricMenetre/NPL -> Follow instruction on the README regarding installation"
 "2","
 Attachement du package : ‘NPL’
 
