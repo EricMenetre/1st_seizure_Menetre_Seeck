@@ -484,9 +484,12 @@ data_full_cleaned$date.IRM <- as_date(data_full_cleaned$date.IRM)
 87. **ATCD_specific**: Description of the medical history before the first event, type character
 88. **les.progressive**: For patients who showed a brain lesion, specification if the lesion was progressive or not, type character
 89. **type_EGI**: For patients with generalized epilepsy, specification of the type of generalized epilepsy, type character
-90. **dx.general**: Reformulation of the column dx.final (Epileptic seizure, non-epileptic event, unknown), type character
-91. **dx.event**: Reformulation of the column dx.final (Acute syptomatic seizure, Epilepsy, cardiovascular...), type character
-92. **dx.epi**: Reformulation of the column dx.final and type.epi.final (focal vs. generalized), type character
+90. **motif_relapse**: For epileptic patients, verification by a MD if relapses are indeed true relapses, type character
+91. **detail_relapse**: For epileptic patients, column indicating the type of relapse, type character
+92. **commentaire_relapse**: Text either describing a comment about the relapse, or the date of the first relapse
+93. **dx.general**: Reformulation of the column dx.final (Epileptic seizure, non-epileptic event, unknown), type character
+94. **dx.event**: Reformulation of the column dx.final (Acute syptomatic seizure, Epilepsy, cardiovascular...), type character
+95. **dx.epi**: Reformulation of the column dx.final and type.epi.final (focal vs. generalized), type character
   
 
 # Method
@@ -592,7 +595,7 @@ N_dx_event <- data_full_cleaned%>%
 ```
 
 
-We included `r tot_pat` patients, `r N_fem` women, with a mean age of `r M_SD_age[1]` (SD= `r M_SD_age[2]`) years, ranging from `r range_age[1]` to `r range_age[2]`. Most patients were finally diagnosed with an epileptic event (`r N_epi_sz[2]`, N = `r N_epi_sz[1]`/`r tot_pat`), of which `r N_acute[1]` suffered from an acute symptomatic seizure (`r N_acute[2]` of the total sample or `r N_acute[3]` of all patients with an epileptic seizure). The cause was of non-epileptic nature in `r non_epi[2]` (`r non_epi[1]`/`r tot_pat`) of the cases, of which most had a cardiovascular origin (`r N_dx_event$pct_non_epi[N_dx_event$dx.event == "Cardiovascular"][1]`; `r N_dx_event$N[N_dx_event$dx.event == "Cardiovascular"][1]`/`r tot_non_epi`). A psychogenic origin was diagnosed in `r N_dx_event$N[N_dx_event$dx.event == "Psychogenic non epileptic seizure"][1]` subjects (`r N_dx_event$pct_tot[N_dx_event$dx.event == "Psychogenic non epileptic seizure"][1]` of the total sample).
+We included `r tot_pat` patients, `r N_fem` women, with a mean age of `r M_SD_age[1]` (SD= `r M_SD_age[2]`) years, ranging from `r range_age[1]` to `r range_age[2]`. Most patients were finally diagnosed with an epileptic event (N = `r N_epi_sz[1]`/`r tot_pat`; `r N_epi_sz[2]`), of which `r N_acute[1]` suffered from an acute symptomatic seizure (`r N_acute[2]` of the total sample or `r N_acute[3]` of all patients with an epileptic seizure). The cause was of non-epileptic nature in `r non_epi[2]` (`r non_epi[1]`/`r tot_pat`) of the cases, of which most had psychogenic non-epileptic seizures (N = `r N_dx_event$N[N_dx_event$dx.event == "Psychogenic non epileptic seizure"][1]`/`r tot_non_epi`; `r N_dx_event$pct_non_epi[N_dx_event$dx.event == "Psychogenic non epileptic seizure"][1]`), except for the "Other" group (N = `r N_dx_event$N[N_dx_event$dx.event == "Other"][1]`/`r tot_non_epi`; `r N_dx_event$pct_non_epi[N_dx_event$dx.event == "Other"][1]`). 
 In `r N_dx_event$N[is.na(N_dx_event$dx.event)]` patients (`r N_dx_event$pct_tot[is.na(N_dx_event$dx.event)]`), the causes of the index event remained unknown. The most frequent reasons of lack of diagnosis were a) lost to follow-up, b) patients with undetermined diagnosis were not residents in the Geneva area. 
 
 **Distribution of the diagnoses in the tree**
@@ -684,9 +687,10 @@ model_age <- lm(age ~  dx_paste + more_1_event + genre + les.epi, data = data_lm
 vif(model_age)
 
 ```
-An ANOVA was performed to investigate age differences among the different diagnoses, the patients for whom the index event was the first one or not, genders, and patients with or without an epileptogenic lesion (observed either at CT or MRI). Results suggest a main effect of diagnosis (`r report_mainef_lm(model_age)[1,2]`), implying age differences among the different diagnoses, no main effect of the number of events before the index one (`r report_mainef_lm(model_age)[2,2]`), a main effect of gender (`r report_mainef_lm(model_age)[3,2]`), suggesting that male patients are significantly older than female patients. Moreover, the model showed a significant main effect of the presence or absence of an epileptogenic lesion (`r report_mainef_lm(model_age)[4,2]`), suggesting that patients who show epileptogenic lesions tend to be older. 
+Age is known to be a key element to differntiate diagnoses. To investigate age differences, an ANOVA was performed among the different diagnoses. We were also interested in investigating the age differences among patients for whom the index event was the first one or not, differences in genders, and patients with or without an epileptogenic lesion (observed either at CT or MRI). Results suggest a main effect of the different diagnoses (`r report_mainef_lm(model_age)[1,2]`), implying age differences among the different diagnoses, no main effect of the number of events before the index one (`r report_mainef_lm(model_age)[2,2]`), a main effect of gender (`r report_mainef_lm(model_age)[3,2]`), suggesting that male patients are significantly older than female patients. Moreover, the model showed a significant main effect of the presence or absence of an epileptogenic lesion (`r report_mainef_lm(model_age)[4,2]`), suggesting that patients who show epileptogenic lesions tend to be older. The detailed results and the decomposition of these effects are presented below.
 
 ```{r Table 3}
+sum_history <- sum(!is.na(data_full_cleaned$ATCD_specific))
 temp <- data_full_cleaned%>%
   group_by(ATCD_specific)%>%
   summarise(N = n())%>%
@@ -696,7 +700,7 @@ temp <- data_full_cleaned%>%
                                     ATCD_specific == 'neurologique' ~ 'Neurologic',
                                     ATCD_specific == 'psychiatrique' ~ 'Psychiatric'))%>%
   filter(!is.na(ATCD_specific))%>%
-  mutate(PCT = pct.fun_n(N, 777))%>%
+  mutate(PCT = pct.fun(N, sum_history))%>%
   rename(`Relevant events in medical history` = ATCD_specific)
 
 N_atcd_positive <- temp%>%filter(`Relevant events in medical history` != "No comorbidities")%>%summarize(sum(N))
@@ -764,10 +768,16 @@ N_pat_tumor <- data_full_cleaned%>%
 post_hoc_dx <- emmeans(model_age, list(pairwise ~ dx_paste), adjust = "tukey")
 post_hoc_dx <- as.data.frame(post_hoc_dx$`pairwise differences of dx_paste`)
 post_hoc <- report_emmeans(post_hoc_dx)
+
+juv_myo <- 13
+grand_mal_awa <- 3
+tot_IGE <- nrow(data_full_cleaned%>%filter(dx.epi == "Primary generalized epilepsy"))
+non_classifiable <- tot_IGE - juv_myo - grand_mal_awa
+
 ```
 
 
-If the event occurred during sleep, it was more likely to be of epileptic origin (`r report_chi(chi_sleep_wake)`). Seizures occurred during sleep in `r pct.fun(sz_sleep, tot_epi_disease)` (N = `r sz_sleep`/`r tot_epi_disease`) of the cases, and `r pct.fun(sz_sleep_epi, sz_sleep)` (N = `r sz_sleep_epi`/`r sz_sleep`) of these patients had later confirmed epilepsy. `r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]`/`r tot_pat` (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1], tot_pat)`) had SE, i.e. 80.6% (`r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]`/`r tot_epi_disease`) of all epilepsy patients. Among the epileptic patients, `r N_pat_tumor`/`r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]` (`r pct.fun(N_pat_tumor, N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1])`) were diagnosed with a tumor and were operated. Non-lesional focal epilepsy affected `r N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1]` patients (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1], tot_pat)` of all patients, or `r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1], tot_epi_disease)` of epileptic patients). The mean age (`r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "non lesionnelle"][1],1)`, SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "non lesionnelle"][1],1)`) was lower than that of SE patients (Mean = `r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "lesionnelle"][1],1)`; SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "lesionnelle"][1],1)`), but the difference did not reach significance (`r post_hoc$report[31]`). Because only patients older than 16 years were included, we diagnosed IGE only in `r N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1]` patients (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1], tot_pat)` of all patients or `r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1], tot_epi_disease)` of epileptic patients, mean age: `r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "generalisee idiopathique"][1],2)`; SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "generalisee idiopathique"][1],2)` ). The most frequent syndrome was juvenile myoclonic epilepsy (N = 13) and grand mal on awakening (N = 3). In 17 patients, the precise syndrome was not clear despite generalized epileptogenic abnormalities in the EEG, except for one patient with normal EEG but strongly suggestive semiology. Not surprisingly, the IGE group was significantly younger than the group of patients with focal epilepsy (IGE vs. SE: `r post_hoc$report[25]`; IGE vs. NLE: `r post_hoc$report[26]`). 
+If the event occurred during sleep, it was more likely to be of epileptic origin (`r report_chi(chi_sleep_wake)`). Seizures occurred during sleep in `r pct.fun(sz_sleep, tot_epi_disease)` (N = `r sz_sleep`/`r tot_epi_disease`) of the cases, and `r pct.fun(sz_sleep_epi, sz_sleep)` (N = `r sz_sleep_epi`/`r sz_sleep`) of these patients had later confirmed epilepsy. `r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]`/`r tot_pat` (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1], tot_pat)`) had SE, i.e. 80.6% (`r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]`/`r tot_epi_disease`) of all epilepsy patients. Among the epileptic patients, `r N_pat_tumor`/`r N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1]` (`r pct.fun(N_pat_tumor, N_epi_dx$N[N_epi_dx$type.epi.final == "lesionnelle"][1])`) were diagnosed with a tumor and were operated. Non-lesional focal epilepsy affected `r N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1]` patients (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1], tot_pat)` of all patients, or `r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "non lesionnelle"][1], tot_epi_disease)` of epileptic patients). The mean age (`r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "non lesionnelle"][1],1)`, SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "non lesionnelle"][1],1)`) was lower than that of SE patients (Mean = `r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "lesionnelle"][1],1)`; SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "lesionnelle"][1],1)`), but the difference did not reach significance (`r post_hoc$report[31]`). Because only patients older than 16 years were included, we diagnosed IGE only in `r N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1]` patients (`r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1], tot_pat)` of all patients or `r pct.fun(N_epi_dx$N[N_epi_dx$type.epi.final == "generalisee idiopathique"][1], tot_epi_disease)` of epileptic patients, mean age: `r round(N_epi_dx$mean_age[N_epi_dx$type.epi.final == "generalisee idiopathique"][1],2)`; SD = `r round(N_epi_dx$sd_age[N_epi_dx$type.epi.final == "generalisee idiopathique"][1],2)` ). The most frequent syndrome was juvenile myoclonic epilepsy (N = `r juv_myo`) and grand mal on awakening (N = `r grand_mal_awa`). In `r non_classifiable` patients, the precise syndrome was not clear despite generalized epileptogenic abnormalities in the EEG, except for one patient with normal EEG but strongly suggestive semiology. Not surprisingly, the IGE group was significantly younger than the group of patients with focal epilepsy (IGE vs. SE: `r post_hoc$report[25]`; IGE vs. NLE: `r post_hoc$report[26]`). 
 
 ### Psychogenic origin
 
@@ -794,7 +804,7 @@ N_psy <- sum(temp$N)
 ```
 
 
-In `r N_epi_non_dx$N[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]` patients, seizures were of psychogenic origin (`r pct.fun(N_epi_non_dx$N[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1], tot_pat)` of the whole sample). These patients were significantly younger than those from the other groups (mean age: `r N_epi_non_dx$mean_age[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]`; SD = `r N_epi_non_dx$sd_age[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]`),  i.e. the cardiac group (`r post_hoc$report[15]`), the cardiovascular group (`r post_hoc$report[22]`), SE (`r post_hoc$report[33]`) and compared to the other diagnoses (`r post_hoc$report[40]`). Even though women were significantly more likely to have psychogenic non-epileptic seizures (t(919) = 2.78; p = 0.005) compared to other non-epileptic diagnoses, men also presented psychogenic events (`r pct.fun(N_H_psy, N_psy)`, N = `r N_H_psy`/`r N_psy`).
+In `r N_epi_non_dx$N[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]` patients, seizures were of psychogenic origin (`r pct.fun(N_epi_non_dx$N[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1], tot_pat)` of the whole sample). These patients were significantly younger than those from the other groups (mean age: `r N_epi_non_dx$mean_age[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]`; SD = `r N_epi_non_dx$sd_age[N_epi_non_dx$dx.event == "Psychogenic non epileptic seizure"][1]`),  i.e. the cardiac group (`r post_hoc$report[15]`), the cardiovascular group (`r post_hoc$report[22]`), SE (`r post_hoc$report[33]`) and compared to the other diagnoses category (`r post_hoc$report[40]`). Even though women were significantly more likely to have psychogenic non-epileptic seizures (t(919) = 2.78; p = 0.005) compared to other non-epileptic diagnoses, men are also well represented in this group (N = `r N_H_psy`/`r N_psy`; `r pct.fun(N_H_psy, N_psy)`).
 
 ### Cardiovascular origin
 
@@ -840,7 +850,7 @@ types_cardiovasc <- data_full_cleaned%>%
 ```
 
 
-Not surprisingly, patients (N= `r N_epi_non_dx$N[N_epi_non_dx == "Cardiovascular"][1]`) were on average significantly older than the vasovagal and orthostatic syncope group (`r post_hoc$report[24]`), the NLE group (`r post_hoc$report[20]`), the IGE group (`r post_hoc$report[18]`), as well as the psychogenic group (`r post_hoc$report[22]`). In most of the patients (`r 100- ATCD$PCT[ATCD$ATCD_specific == "Cardiac"]`%) of the patients, no prior cardiac problems were reported. The mean age of these patients was `r N_epi_non_dx$mean_age[N_epi_non_dx == "Cardiovascular"][1]` (SD = `r N_epi_non_dx$sd_age[N_epi_non_dx == "Cardiovascular"][1]`), with `r pct.fun(N_less_60,N_epi_non_dx$N[N_epi_non_dx == "Cardiovascular"][1])` younger than 60 years (range: `r age_range_cardio[1]` to `r age_range_cardio[2]` years old).
+Not surprisingly, patients (N= `r N_epi_non_dx$N[N_epi_non_dx == "Cardiovascular"][1]`) were on average significantly older than the vasovagal and orthostatic syncope group (`r post_hoc$report[24]`), the NLE group (`r post_hoc$report[20]`), the IGE group (`r post_hoc$report[18]`), as well as the psychogenic group (`r post_hoc$report[22]`). In most of the patients (`r 100- ATCD$PCT[ATCD$ATCD_specific == "Cardiac"]`%), no prior cardiac problems were reported. The mean age of these patients was `r N_epi_non_dx$mean_age[N_epi_non_dx == "Cardiovascular"][1]` (SD = `r N_epi_non_dx$sd_age[N_epi_non_dx == "Cardiovascular"][1]`), with `r pct.fun(N_less_60,N_epi_non_dx$N[N_epi_non_dx == "Cardiovascular"][1])` younger than 60 years (range: `r age_range_cardio[1]` to `r age_range_cardio[2]` years old).
 
 `r kable(types_cardiovasc)`
 
@@ -879,7 +889,7 @@ N_normal_epi <- N_les_epi$N[N_les_epi$les.epi == "normal"]+N_les_epi$N[N_les_epi
 ```
 
 
-Among all patients, `r N_normal` had a normal MRI or showed benign abnormalities (few small white matter lesions, developmental venous abnormalities, etc), while `r N_normal_epi` epileptic patients showed normal or non-epileptogenic lesions. `r N_les$N[N_les$les.epi == "douteux"]` of the `r sum(N_les$N)` patients with an MRI (`r pct.fun(N_les$N[N_les$les.epi == "douteux"], sum(N_les$N))`) belonged to the intermediate category. Among the epileptic patients, the proportion is relatively similar (`r pct.fun(N_les_epi$N[N_les_epi$les.epi == "douteux"], sum(N_les_epi$N))`  or `r N_les_epi$N[N_les_epi$les.epi == "douteux"]` of the `r sum(N_les_epi$N)` patients). Regarding age, patients with an epileptogenic lesion and intermediate lesion were significantly older than the patients without lesion (epileptogenic lesion: `r post_hoc_les$report[9]`; intermediate: `r post_hoc_les$report[7]`).
+Among all patients, `r N_normal` had a normal MRI or showed benign abnormalities (few small white matter lesions, developmental venous abnormalities, etc), while `r N_normal_epi` epileptic patients showed normal or non-epileptogenic lesions. `r N_les$N[N_les$les.epi == "douteux"]` of the `r sum(N_les$N)` patients with an MRI (`r pct.fun(N_les$N[N_les$les.epi == "douteux"], sum(N_les$N))`) belonged to the intermediate category. Among the epileptic patients, the proportion was relatively similar (`r pct.fun(N_les_epi$N[N_les_epi$les.epi == "douteux"], sum(N_les_epi$N))`  or `r N_les_epi$N[N_les_epi$les.epi == "douteux"]` of the `r sum(N_les_epi$N)` patients). Regarding age, patients with an epileptogenic lesion and intermediate lesion were significantly older than the lesion free patients (epileptogenic lesion: `r post_hoc_les$report[9]`; intermediate: `r post_hoc_les$report[7]`).
 
 ### Standard EEG
 
@@ -985,7 +995,7 @@ chi2_EEG_epi <- chisq.test(data_chi, simulate.p.value = T)
 ```
 
 
-In `r N_epi_spikes` epileptic patients (over `r N_epi_EEG` who underwent an EEG; `r pct.fun(N_epi_spikes, N_epi_EEG)`), the EEG showed epileptiform abnormalities, and in another `r N_non_epi_abn_EEG` (`r pct.fun(N_non_epi_abn_EEG, N_epi_EEG)`) unspecific abnormalities were identified, leaving `r N_epi_norm_EEG` (`r pct.fun(N_epi_norm_EEG, N_epi_EEG)`) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in `r EEG_24` (`r pct.fun(EEG_24, N_tot_EEG_time)`) out of `r N_tot_EEG_time` patients for whom the timing information could be retrieved, the standard EEG was done within 24h. `r pct.fun(EEG_24_48, N_tot_EEG_time)` (N = `r EEG_24_48`/`r N_tot_EEG_time`) of the EEG were realised between 24 and 48h, while `r pct.fun(EEG_48_72, N_tot_EEG_time)` (N = `r EEG_48_72`/`r N_tot_EEG_time`) were done between 48h and 72h, and the reminder `r pct.fun(EEG_more_72, N_tot_EEG_time)` (N = `r EEG_more_72`/`r N_tot_EEG_time`) after 72h. There was no difference in the occurrence of epileptiform or any abnormal finding between the different delays of the whole group (`r report_chi(chi2_EEG_all)`) or of the group of epileptic patients taken separately (`r report_chi(chi2_EEG_epi)`). 
+In `r N_epi_spikes` epileptic patients (over `r N_epi_EEG` who underwent an EEG; `r pct.fun(N_epi_spikes, N_epi_EEG)`), the EEG showed epileptiform abnormalities, and in another `r N_non_epi_abn_EEG` (`r pct.fun(N_non_epi_abn_EEG, N_epi_EEG)`) unspecific abnormalities were identified, leaving `r N_epi_norm_EEG` (`r pct.fun(N_epi_norm_EEG, N_epi_EEG)`) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in `r EEG_24` (`r pct.fun(EEG_24, N_tot_EEG_time)`) out of `r N_tot_EEG_time` patients for whom the timing information could be retrieved, the standard EEG was done within 24h. `r pct.fun(EEG_24_48, N_tot_EEG_time)` (N = `r EEG_24_48`/`r N_tot_EEG_time`) of the EEG were realised between 24 and 48h, while `r pct.fun(EEG_48_72, N_tot_EEG_time)` (N = `r EEG_48_72`/`r N_tot_EEG_time`) were done between 48h and 72h, and the reminder `r pct.fun(EEG_more_72, N_tot_EEG_time)` (N = `r EEG_more_72`/`r N_tot_EEG_time`) after 72h. There was no difference in the occurrence of epileptiform abnormalities between the different delays for the whole group (`r report_chi(chi2_EEG_all)`) or for the group of epileptic patients taken separately (`r report_chi(chi2_EEG_epi)`). 
 
 ```{r Standard EEG 2}
 temp <- data_full_cleaned%>%filter(dx.event != "Epilepsy" | is.na(dx.event))%>%
@@ -1006,12 +1016,11 @@ N_spikes_not_epi_lt_normal <- nrow(data_full_cleaned%>%
     filter(res.lt.EEG == "normal")%>%
   select(code.pat, date.1st.cs.su, date.1st.EEG, res.1st.EEG, EEG.result_resume,  date.lt.EEG, res.lt.EEG, EEG.lt.result_resume, dx.final, type.epi.final, type.autre.final))
 
+rest_non_epi_spikes <- N_spikes_not_epi-N_spikes_not_epi_lt_normal
 ```
 
 
-Except from acute symptomatic seizures (N = `r temp$N[temp$dx.event == "Acute symptomatic seizure"][1]`) unknown diagnosis (N= `r temp$N[temp$dx.general == "Unknown"][1]`) and unknown epilepsy type (N = `r temp$N[temp$dx.event == "Unknown"][1]`), epileptiform abnormalities were found in `r N_spikes_not_epi` patients out of `r tot_non_epi` without a diagnosis of epilepsy on the standard EEG, corresponding to `r pct.fun(N_spikes_not_epi, tot_non_epi)` of false positive results. For `r N_spikes_not_epi_lt_normal` of them, the LT EEG was normal and the epileptogenic abnormality (sharper slow waves in all cases) was not confirmed. Regarding the 4 *(!!!fixed number !!!!)* other cases, LT EEG was either refused or not proposed to the patient, but the observed epileptiform discharges location was not concordant with the semiology of the event, leading to the exclusion of the diagnosis of epilepsy despite the observed electrical abnormalities.
-
-Note: check corrections Pia
+Except from acute symptomatic seizures (N = `r temp$N[temp$dx.event == "Acute symptomatic seizure"][1]`) unknown diagnosis (N= `r temp$N[temp$dx.general == "Unknown"][1]`) and unknown epilepsy type (N = `r temp$N[temp$dx.event == "Unknown"][1]`), elements interpreted as epileptiform abnormalities were found in `r number_to_word(N_spikes_not_epi)` patients out of `r tot_non_epi` without a diagnosis of epilepsy on the standard EEG, corresponding to `r pct.fun(N_spikes_not_epi, tot_non_epi)` of false positive results. For `r number_to_word(N_spikes_not_epi_lt_normal)` of them, the LT EEG was normal and the epileptogenic abnormality (sharper slow waves in all cases) was not confirmed. Regarding the `r number_to_word(rest_non_epi_spikes)` other cases, LT EEG was either refused or not proposed to the patient, but the observed epileptiform discharges location was not concordant with the semiology of the event, leading to the exclusion of the diagnosis of epilepsy despite the observed electrical abnormalities.
 
 ### Long-term EEG
 
@@ -1051,7 +1060,7 @@ N_LT_EEG_norm_std_spikes <- nrow(data_full_cleaned%>%
 ```
 
 
-`r N_LT_EEG` patients underwent LTM-EEG. Overall, `r N_spikes_LTEEG` patients (`r pct.fun(N_spikes_LTEEG, N_LT_EEG)`) showed epileptiform discharges, and `r N_spikes_LTEEG_epi` (`r pct.fun(N_spikes_LTEEG_epi, N_spikes_LTEEG)`) of them were finally diagnosed with epilepsy. Among the remaining `r N_spikes_LTEEG - N_spikes_LTEEG_epi`, `r number_to_word(spikes_non_epi$N[spikes_non_epi$dx.event == "Acute symptomatic seizure"][1])` of them were diagnosed as acute symptomatic seizures, and for `r number_to_word(spikes_non_epi$N[spikes_non_epi$dx.event == "Unknown"][1])` others, the pathological nature of the anomalies remained uncertain. 
+`r N_LT_EEG` patients underwent LTM-EEG. Overall, `r N_spikes_LTEEG` patients (`r pct.fun(N_spikes_LTEEG, N_LT_EEG)`) showed epileptiform discharges, and `r N_spikes_LTEEG_epi` (`r pct.fun(N_spikes_LTEEG_epi, N_spikes_LTEEG)`) of them were finally diagnosed with epilepsy. Among the remaining `r number_to_word(N_spikes_LTEEG - N_spikes_LTEEG_epi)`, `r number_to_word(spikes_non_epi$N[spikes_non_epi$dx.event == "Acute symptomatic seizure"][1])` of them were diagnosed as acute symptomatic seizures, and for `r number_to_word(spikes_non_epi$N[spikes_non_epi$dx.event == "Unknown"][1])` others, the pathological nature of the anomalies remained uncertain. 
 Of the patients with epilepsy but normal EEG or non-epileptogenic abnormalities at the standard EEG (N = `r N_epi_norm_EEG + N_non_epi_abn_EEG`), `r N_LT_EEG_norm_std` (`r pct.fun(N_LT_EEG_norm_std, (N_epi_norm_EEG + N_non_epi_abn_EEG))`) underwent LTM-EEG which identified epileptiform discharges in an additional `r N_LT_EEG_norm_std_spikes` patients (`r pct.fun(N_LT_EEG_norm_std_spikes,N_LT_EEG_norm_std)`).
 
 ### Multimodal information
@@ -1095,10 +1104,8 @@ N_pat_all_normal_epi_lt_mri <- nrow(data_full_cleaned%>%
 
 
 While routine EEG, MRI and LTM-EEG are the hallmark exams to diagnose epilepsy, we were wondering what the combined yield is. Among patients with all three negative exams (N = `r N_pat_all_normal`), `r number_to_word(N_pat_all_normal_epi)` patients were nevertheless diagnosed with epilepsy (`r pct.fun(N_pat_all_normal_epi,N_pat_all_normal)` without taking into account the `r N_pat_all_normal_suspicious_les` patients with intermediate lesions). If only MRI and long-term EEG are negative, this number rises to `r number_to_word(N_pat_all_normal_epi_lt_mri)` i.e. `r number_to_word(N_pat_all_normal_epi_lt_mri - N_pat_all_normal_epi)` patients (`r pct.fun((N_pat_all_normal_epi_lt_mri - N_pat_all_normal_epi), tot_epi_disease)` of the group of epileptic patients) would be incorrectly diagnosed as non-epileptic. 
+One of these patients presented a focal seizure revealing itself by an episode of transient global amnesia while the second one consulted for a generalized tonic clonic seizure starting by aphasic symptoms (tip of the tongue) (IMPROVE DESCRIPTION).
 
-These patients presented a semiology... 
-
-Note: Add a probability tree with the three exams to see probabilities among the different exams
 
 ```{r probability tree multimodal information}
 
@@ -1181,7 +1188,7 @@ data_tree_exams%>%
 
 
 
-## Evolution of the diagnosis over time
+## Evolution of the diagnosis over time (RESULTS IN PROGRESS)
 
 ```{r Diagnosis evolution, warning=FALSE, message=FALSE, fig.height=5, fig.width=8}
 
@@ -1278,16 +1285,173 @@ ggcoxdiagnostics(cox_model, type = "dfbeta", linear.predictions = TRUE) # OK -->
 ggcoxdiagnostics(cox_model, type = "deviance", linear.predictions = TRUE)
 
 
-#Impact of delay until the patients recieves its final diagnosis and the relapses
+#Impact of delay until the patients recieve their final diagnosis and the relapses
 
+
+data_relapse_epi <- data_full_cleaned%>%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.dx.final)%>%
+  mutate(dx.dicho = ifelse(dx.event != "Epilepsy" | is.na(dx.event), "Non epileptic", "Epileptic"), 
+         relapses = case_when(n.tot.recidives == 0 ~ "No relapse",
+                              dx.dicho == "Non epileptic" & n.tot.recidives > 0 ~ "Relapse",
+                              detail_relapse == "pas de ttt" ~ "Relapse",
+                              detail_relapse == "ttt ok et bonne compliance" ~ "Relapse",
+                              detail_relapse == "Probleme de compliance" ~ "Relapse",
+                              detail_relapse == "ttt ok taux infra ou ttt inadequat" ~ "Relapse",
+                              motif_relapse == "pas de recidives trouvees" ~ "No relapse",
+                              TRUE ~ "No relapse"),
+         date.dx.final = as_date(date.dx.final),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_dx = date.dx.final - date.1st.cs.su)%>%
+  filter(dx.event == "Epilepsy",
+         delay_dx != is.na(delay_dx),
+         delay_dx >= 0,
+         delay_dx < 730)
+
+median_delay_epi <- median(data_relapse_epi$delay_dx)
+
+data_chi_epi <- data_relapse_epi%>%
+      mutate(delay_dicho = ifelse(delay_dx < median_delay_epi, "short", "long"))%>%
+      select(code.pat, relapses, delay_dicho)%>%
+  group_by(relapses, delay_dicho)%>%
+  summarise(N = n())%>%
+  spread(key = delay_dicho, value = N)
+data_chi_epi <- as.data.frame(data_chi_epi[,2:3])
+
+chi_epi <- chisq.test(data_chi_epi) # p-value = 0.2354
+
+
+# Same but taking all patients together
+
+data_relapse_all <- data_full_cleaned%>%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.dx.final)%>%
+  mutate(dx.dicho = ifelse(dx.event != "Epilepsy" | is.na(dx.event), "Non epileptic", "Epileptic"), 
+         relapses = case_when(n.tot.recidives == 0 ~ "No relapse",
+                              dx.dicho == "Non epileptic" & n.tot.recidives > 0 ~ "Relapse",
+                              detail_relapse == "pas de ttt" ~ "Relapse",
+                              detail_relapse == "ttt ok et bonne compliance" ~ "Relapse",
+                              detail_relapse == "Probleme de compliance" ~ "Relapse",
+                              detail_relapse == "ttt ok taux infra ou ttt inadequat" ~ "Relapse",
+                              motif_relapse == "pas de recidives trouvees" ~ "No relapse",
+                              TRUE ~ "No relapse"),
+         date.dx.final = as_date(date.dx.final),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_dx = date.dx.final - date.1st.cs.su)%>%
+  filter(delay_dx != is.na(delay_dx),
+         delay_dx >= 0,
+         delay_dx < 730)
+
+median_delay_all <- median(data_relapse_all$delay_dx)
+
+data_chi_all <- data_relapse_all%>%
+  mutate(delay_dicho = ifelse(delay_dx < median_delay_all, "short", "long"))%>%
+  select(code.pat, relapses, delay_dicho)%>%
+  group_by(relapses, delay_dicho)%>%
+  summarise(N = n())%>%
+  spread(key = delay_dicho, value = N)
+data_chi_all <- as.data.frame(data_chi_all[,2:3])
+
+chi_all <- chisq.test(data_chi_all) # p-value = 0.001249
+
+# Visualization 
+
+plot_all <- data_relapse_all%>%
+  mutate(delay_dicho = ifelse(delay_dx < median_delay_all, "short", "long"))%>%
+  select(code.pat, relapses, delay_dicho)%>%
+  group_by(relapses, delay_dicho)%>%
+  summarise(N = n())
+
+plot_epi <- data_relapse_epi%>%
+  mutate(delay_dicho = ifelse(delay_dx < median_delay_epi, "short", "long"))%>%
+  select(code.pat, relapses, delay_dicho)%>%
+  group_by(relapses, delay_dicho)%>%
+  summarise(N = n())
+
+
+plot_all_pat <- plot_all%>%
+  ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+  geom_bar(stat = "identity", alpha = 0.8)+
+  scale_fill_brewer(palette = "Greens")+
+  theme_minimal()+
+  labs(x = "Delay first seizure - final diagnosis", title = "All patients", fill = "Relapses")+
+  coord_cartesian(ylim = c(0,135))
+
+plot_epi_pat <- plot_epi%>%
+  ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+  geom_bar(stat = "identity", alpha = 0.8)+
+  scale_fill_brewer(palette = "Reds")+
+  theme_minimal()+
+  labs(x = "Delay first seizure - final diagnosis", title = "Epileptic patients", fill = "Relapses")+
+  coord_cartesian(ylim = c(0,135))
+
+fig_delay_dx <- ggarrange(plot_all_pat, plot_epi_pat)
+
+
+# Impact of the treatment delay
+# epi
+
+data_relapse_epi_ttt <- data_full_cleaned%>%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.debut.tt)%>%
+  mutate(dx.dicho = ifelse(dx.event != "Epilepsy" | is.na(dx.event), "Non epileptic", "Epileptic"), 
+         relapses = case_when(n.tot.recidives == 0 ~ "No relapse",
+                              dx.dicho == "Non epileptic" & n.tot.recidives > 0 ~ "Relapse",
+                              detail_relapse == "pas de ttt" ~ "Relapse",
+                              detail_relapse == "ttt ok et bonne compliance" ~ "Relapse",
+                              detail_relapse == "Probleme de compliance" ~ "Relapse",
+                              detail_relapse == "ttt ok taux infra ou ttt inadequat" ~ "Relapse",
+                              motif_relapse == "pas de recidives trouvees" ~ "No relapse",
+                              TRUE ~ "No relapse"),
+         date.debut.tt = as_date(date.debut.tt),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_tt = date.debut.tt - date.1st.cs.su)%>%
+  filter(dx.event == "Epilepsy",
+         delay_tt != is.na(delay_tt),
+         delay_tt >= 0,
+         delay_tt < 730)
+
+median_delay_epi_tt <- median(data_relapse_epi_ttt$delay_tt)
+
+data_chi_epi_tt <- data_relapse_epi_ttt%>%
+      mutate(delay_dicho = ifelse(delay_tt < median_delay_epi_tt, "short", "long"))%>%
+      select(code.pat, relapses, delay_dicho)%>%
+  group_by(relapses, delay_dicho)%>%
+  summarise(N = n())%>%
+  spread(key = delay_dicho, value = N)
+data_chi_epi_tt <- as.data.frame(data_chi_epi_tt[,2:3])
+
+chi_epi_tt <- chisq.test(data_chi_epi_tt) #  p-value = 0.07186
+
+
+# Vizualisation treatment 
+
+# plot_ttt_epi <- data_relapse_epi_ttt%>%
+#       mutate(delay_dicho = ifelse(delay_tt < median_delay_epi_tt, "short", "long"))%>%
+#       select(code.pat, relapses, delay_dicho)%>%
+#   group_by(relapses, delay_dicho)%>%
+#   summarise(N = n())
+# 
+# plot_ttt_epi%>%
+#   ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+#   geom_bar(stat = "identity")+
+#   scale_fill_brewer(palette = "Blues")+
+#   theme_minimal()+
+#   labs(x = "Delay first seizure - treatment instauration", title = "Epileptic patients", fill = "Relapses")
 
 ```
 
-Among all patients the delay between the first episode and the final diagnosis was on average of `r as.numeric(delay_dx_all$MEAN)` days (SD = `r as.numeric(delay_dx_all$SD)`). As shown in Figure X and Table X, a Cox regression showed that epileptic patients (M= `r as.numeric(delay_dx_epi$MEAN)`; SD= `r delay_dx_epi$SD`) tend to reach their final diagnosis earlier than non-epileptic patients (M = `r as.numeric(delay_dx_non_epi$MEAN)`; SD = `r delay_dx_non_epi$SD`) (ASSUMPTIONS VIOLATED; HOW TO FIX IT ?).
-Moreover, data show that patients who recieve their final diagnosis faster are less prone to relapse (STATS METHOD NEED TO BE DEFINED).
+
+Among all patients the delay between the first episode and the final diagnosis was on average of `r as.numeric(delay_dx_all$MEAN)` days (SD = `r as.numeric(delay_dx_all$SD)`). As shown in Figure X and Table X, a Cox regression showed that epileptic patients (M= `r as.numeric(delay_dx_epi$MEAN)`; SD= `r delay_dx_epi$SD`) tend to receive their final diagnosis earlier than non-epileptic patients (M = `r as.numeric(delay_dx_non_epi$MEAN)`; SD = `r delay_dx_non_epi$SD`) (ASSUMPTIONS VIOLATED; HOW TO FIX IT ?).
 
 `r kable(results_survival)`
 *Table X: results of the Cox regression investigating the difference in delay between epileptic and non epileptic patients.*
+
+Moreover, as shown in Figure X, data across epileptic and non-epileptic patients show that patients who receive their final diagnosis earlier (dichotomization of the delays between short and long based on the median) are less prone to relapse (`r report_chi(chi_all)`). Even though the same tendency was found for epileptic patients, the effect did not reach significance (`r report_chi(chi_epi)`). This might be explained by the fact that epileptic patients were directly treated in the ED. By taking into account the delay between the first seizure and the prescription of a treatment, a marginal tendency appears (`r report_chi(chi_epi_tt)`).
+
+```{r figure delay dx, fig.width= 7, fig.height= 5, echo=FALSE}
+fig_delay_dx
+
+```
+
+*Figure X: bar plots comparing the proportion of patients who relapsed based on the delay between the first event, and the definition of the final diagnosis. all delays shorter than the median were calssified as short delay, while all delays longer than the median were clasified as long delays.*
 
 ## Mortality
 
@@ -1331,7 +1495,7 @@ chi_dead <- chisq.test(datachi)
 ```
 
 
-Among the entire sample, `r data_dead$N[data_dead$alive == "dead"]` patients deceased during the two year follow-up (`r pct.fun(sum(data_dead_HF$N[data_dead$alive == "dead"]), tot_pat)`; mean age = `r data_dead$mean_age[data_dead$alive =="dead"]`, `r data_dead_HF$N[data_dead_HF$alive =="dead" & data_dead_HF$genre == "F"]` females and `r data_dead_HF$N[data_dead_HF$alive =="dead" & data_dead_HF$genre == "H"]` males). In the epileptic group (N = `r datachi$dead[1]`/`r tot_epi_disease`; `r pct.fun(datachi$dead[1],tot_epi_disease) `), this proportion is significantly larger than in the non-epileptic group (N = `r datachi$dead[2]`/`r tot_non_epi`; `r pct.fun(datachi$dead[2],tot_non_epi)`; `r report_chi(chi_dead)`), which is mainly due to patients with epilepsy and dementia or brain tumors. Two epileptic patients died from other causes (one of them from cardiac origin and the other one from severe hypernatremia and infection) and for six patients the cause of the death remained unclear. None of the patients experienced death related directly to an epileptic seizure. 
+Among the entire sample, `r data_dead$N[data_dead$alive == "dead"]` patients deceased during the two year follow-up (`r pct.fun(data_dead$N[data_dead$alive == "dead"], tot_pat)`; mean age = `r data_dead$mean_age[data_dead$alive =="dead"]`, `r data_dead_HF$N[data_dead_HF$alive =="dead" & data_dead_HF$genre == "F"]` females and `r data_dead_HF$N[data_dead_HF$alive =="dead" & data_dead_HF$genre == "H"]` males). In the epileptic group (N = `r datachi$dead[1]`/`r tot_epi_disease`; `r pct.fun(datachi$dead[1],tot_epi_disease) `), this proportion is significantly larger than in the non-epileptic group (N = `r datachi$dead[2]`/`r tot_non_epi`; `r pct.fun(datachi$dead[2],tot_non_epi)`; `r report_chi(chi_dead)`), which is mainly due to patients with epilepsy and dementia or brain tumors. Two epileptic patients died from other causes (one of them from cardiac origin and the other one from severe hypernatremia and infection) and for six patients the cause of the death remained unclear. None of the patients experienced death related directly to an epileptic seizure. 
 
 
 ## Relapses
@@ -1490,293 +1654,143 @@ res_chi_cardiac <- chisq.test(data_chi)
 
 ```
 
-Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Some patients after a first non provoked epileptic event sometimes presented an acute symptomatic seizure (N = `r N_acute_relapses`/`r nrow(data_full_cleaned%>%filter(dx.event == "Epilepsy"))`; `r pct_acute_relapses`). These event wer not retained as relapses. Among all patients, `r N_relapses_total` (`r pct.fun(N_relapses_total, nrow(data_full_cleaned))`) relapsed. The proportion is higher for epileptic patients (`r N_relapses_epi`/`r nrow(data_full_cleaned%>%filter(dx.event == "Epilepsy"))`; `r pct_relapses_epi`), compared to non epileptic patients (`r N_relapses_non_epi`/`r N_non_epi`; `r pct_relapses_non_epi`). This proportion was significantly different among the two groups (`r report_results(result_chi_epi_non_epi, method = "chisq")`). Among epileptic patients, focal epilepsy patients (`r N_relapses_focal`/`r N_focal`; `r pct_relapses_focal`)tend to relapse more than generalized epilepsy patients (`r N_relapses_generalized`/`r N_generalized`; `r pct_relapses_generalized`), however, this difference did not reached significance (`r report_results(res_chi_focal_gen, method = "chisq")`). Inside the focal epilepsy group, patient with non lesional epilepsy (`r N_relapses_non_les`/ `r N_non_les` ; `r pct_relapses_non_les`) are significantly most prone to relapse compared to lesional patients(`r N_relapses_les`/`r N_les`; `r pct_relapses_les`; `r report_results(res_chi_les_non_les, method = "chisq")`).
-Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (`r N_relapses_cardiac`/`r N_cardiac`; `r pct_relapses_cardiac`), however, this difference did not reach significance either(`r report_results(res_chi_cardiac, "chisq")`). See Table X for a complete description of the relapse rate per diagnosis.
+Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Among all patients, `r N_relapses_total` (`r pct.fun(N_relapses_total, nrow(data_full_cleaned))`) relapsed. The proportion is significantly higher for epileptic patients (N = `r N_relapses_epi`/`r nrow(data_full_cleaned%>%filter(dx.event == "Epilepsy"))`; `r pct_relapses_epi`), compared to non epileptic patients (N = `r N_relapses_non_epi`/`r N_non_epi`; `r pct_relapses_non_epi`; `r report_results(result_chi_epi_non_epi, method = "chisq")`). Among epileptic patients, focal epilepsy patients (N = `r N_relapses_focal`/`r N_focal`; `r pct_relapses_focal`) tend to relapse more than generalized epilepsy patients (N = `r N_relapses_generalized`/`r N_generalized`; `r pct_relapses_generalized`), however, this difference did not reached significance (`r report_results(res_chi_focal_gen, method = "chisq")`). Inside the focal epilepsy group, patient with non lesional epilepsy (N = `r N_relapses_non_les`/`r N_non_les` ; `r pct_relapses_non_les`) are significantly most prone to relapse compared to lesional patients (N = `r N_relapses_les`/`r N_les`; `r pct_relapses_les`; `r report_results(res_chi_les_non_les, method = "chisq")`).
+Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (N = `r N_relapses_cardiac`/`r N_cardiac`; `r pct_relapses_cardiac`), however, this difference did not reach significance either (`r report_results(res_chi_cardiac, "chisq")`). See Table X for a complete description of the relapse rate per diagnosis.
 
 `r kable(relapse_table)`
 
+```{r relapses II}
+# Table of the reason of relapse among the epileptic patients
+N_epi <- nrow(data_full_cleaned%>%filter(dx.event == "Epilepsy"))
+
+type_relapse_table <- data_full_cleaned%>%
+  filter(dx.event == "Epilepsy")%>%
+  group_by(detail_relapse)%>%
+  summarise(N = n(),
+            PCT = pct.fun_n(N, N_epi))%>%
+  mutate(detail_relapse = case_when(detail_relapse == "crise provoquee" ~ "Acute symptomatic seizure",
+                                    detail_relapse == "pas de ttt" ~ "No treatment",
+                                    detail_relapse == "Probleme de compliance" ~ "Compliance problem",
+                                    detail_relapse == "ttt ok et bonne compliance" ~ "Adequate treatment and good compliance",
+                                    detail_relapse == "ttt ok taux infra ou ttt inadequat" ~ "Infra-therapeutic drug-level or suboptimal treatment ",
+                                    is.na(detail_relapse) ~ "no relapse"))
+
+# Acute relapses 
+N_acute <- 4
+OH <- 2
+sevr_ttt <- 2
+
+```
+
+Among epileptic patients, we investigated the origin of the first relapse following the first seizure (or the index event in case of non-investigated anterior seizures). As shown in Table X, Results indicate that most commonly, patients relapsed despite an adequate treatment and no compliance problems were reported (N = `r type_relapse_table$N[type_relapse_table ==  "Adequate treatment and good compliance"]`/`r N_epi`; `r type_relapse_table$PCT[type_relapse_table == "Adequate treatment and good compliance"]`). Nevertheless, a non negligeable part of the patients seem to relapse during the interval a treatment was instaurated, or refused the prescription of an antiepileptic drug (N = `r type_relapse_table$N[type_relapse_table == "No treatment"]`/`r N_epi`; `r type_relapse_table$PCT[type_relapse_table == "No treatment"]`). This stresses again the importance to investigate these patients as swiftly as possible. Interestingly, `r number_to_word(type_relapse_table$N[type_relapse_table == "Acute symptomatic seizure"])` patients first presented a non-provoked seizure leading to the diagnosis of epilepsy and and a second one considered as an acute symptomatic seizure. This is particularly the case for patients with alcohool addiction problems (`r OH`/`r N_acute`) and drugs withdrawal, such as benzodiazepines (`r sevr_ttt`/`r N_acute`).
+
+`r kable(type_relapse_table)`
+
+*Table X: descriptive statistics of the supposed causes of relapses among the epilepsy patients.*
+
 ## Predictive models
 
-### Logistic regression
+### Model predicting the diagnosis
 
 ```{r predictive logistic regression}
 
-
-```
-
-
-
-
-### A classifier to identify the best predictors of epilepsy diagnosis
-
-```{r First classifier}
-
-set.seed(2020)
-
-# Preparation of the data
-data_RF_outcome_single_tree(data_full_cleaned)
-
-# Random forest model
-# Definition of the model
-RF_model <- randomForest(res.dx.final ~ ., data = data_RF_train, 
-                         ntree = 2000)
-
-# Estimation of the mean decrease gini
-gini <- importance(RF_model)
-gini <- data.frame(rownames(gini), gini)
-gini$MeanDecreaseGini <- round(gini$MeanDecreaseGini,2) 
-gini <- arrange(gini,desc( MeanDecreaseGini))
-
-# Prediction, confusion matrix and accuracy
-prediction <- predict(RF_model, newdata = data_RF_test, type = "class")
-conf_mat <- table(prediction, labels_final_test_RF)
-acc <- round(mean(labels_final_test_RF == prediction),4)*100
-
-# ROC curve
-# Calculate the probability of new observations belonging to each class
-# prediction_for_roc_curve will be a matrix with dimensions data_set_size x number_of_classes
-prediction_for_roc_curve <- predict(RF_model,data_RF_test,type="prob")
-# Use pretty colours:
-pretty_colours <- c("#F8766D","#00BA38")
-# Specify the different classes 
-classes <- levels(data_RF$res.dx.final)
-# For each class
-save_auc <- as.numeric()
-for (i in 1:2){
-  # Define which observations belong to class[i]
-  true_values <- ifelse(labels_final_test_RF==classes[i],1,0)
-  # Assess the performance of classifier for class[i]
-  pred <- prediction(prediction_for_roc_curve[,i],true_values)
-  perf <- performance(pred, "tpr", "fpr")
-  if (i==1)
-  {
-    plot(perf,main="ROC Curve",col=pretty_colours[i]) 
-  }
-  else
-  {
-    plot(perf,main="ROC Curve",col=pretty_colours[i],add=TRUE) 
-  }
-  # Calculate the AUC and print it to screen
-  auc.perf <- performance(pred, measure = "auc")
-  save_auc[i] <- auc.perf@y.values
-}
-
-legend(x = 0.8, y= 0.8, legend = classes, fill = pretty_colours, col = pretty_colours)
-
-save_auc <- do.call(rbind, save_auc)
-res_auc <- data.frame(classes, save_auc)
-
-# Predictive ability of an MD in the ER
-data_MD <- data_full_cleaned%>%
-  mutate(type.epi.initial = case_when(type.epi.initial == "cryptogenique" ~ "non lesionnelle",
-                                      type.epi.initial == "focale symptomatique" ~ "lesionnelle",
-                                      TRUE ~ type.epi.initial))%>%
-  mutate(dx_ini_paste = paste(dx.initial, type.epi.initial),
-         dx_fin_paste = paste(dx.final, type.epi.final))%>%
-  filter(res.1st.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(les.epi != "aucun")%>%
-  filter(status.neuro != "aucun" &  status.neuro != "aucun mais propose" & status.neuro != "non documente")%>%
-  filter(veille.sommeil != "non documente")%>%
-  select(dx_ini_paste, dx_fin_paste)
-
-# confusion matrix and accuracy
-conf_mat_MD <- table(data_MD$dx_ini_paste, data_MD$dx_fin_paste)
-acc_MD <- round(mean(data_MD$dx_ini_paste == data_MD$dx_fin_paste),4)*100
-
-N_first_RF_model <- nrow(data_RF)
-
-```
-
-
-The average accuracy of the Random Forest model was `r acc`%, while the area under the curve was `r round(res_auc$save_auc[1],2)` (see the ROC curve in Figure 3). The ability of the model to predict a diagnosis, was `r pct.fun(conf_mat[1,1],sum(conf_mat[1,1], conf_mat[2,1]))` (`r conf_mat[1,1]`/`r sum(conf_mat[1,1], conf_mat[2,1])`) patients correctly classified in the test dataset) of true positive for the epileptic patients and `r pct.fun(conf_mat[2,2], sum(conf_mat[2,2], conf_mat[1,2]))` (`r conf_mat[2,2]`/`r conf_mat[1,2]` patients correctly classified in the test dataset) for the non-epileptic patients. As a comparison point, if confronting the initially suggested diagnosis in the ED compared to the final diagnosis after at maximum two years of follow-up, the predictive ability of a clinician in the ED was `r acc_MD`% (to predict if a patient is epileptic or not), among which the percentage of true positives for epileptic patients was `r pct.fun(conf_mat_MD[1,1], sum(conf_mat_MD[1,1], conf_mat_MD[2,1]))` (`r conf_mat_MD[1,1]`/`r sum(conf_mat_MD[1,1], conf_mat_MD[2,1])` patients correctly classified) and `r pct.fun(conf_mat_MD[2,2], sum(conf_mat_MD[2,2], conf_mat_MD[1,2]))` (`r conf_mat_MD[2,2]`/ `r sum(conf_mat_MD[2,2], conf_mat_MD[1,2])` patients correctly classified) for non-epileptic patients.
-
-`r kable(gini)`
-
-*Table 8: Mean Decrease Gini indexes among the predictors. The higher the score, the higher the importance of the factor for the model. The Gini scores are standardized in percent.*
-
-
-**Probability tree based on the three best factors explained by the model**
-
-```{r decision tree diagnosis RF model}
-
-# Decision tree based on the 3 highest mean decrease gini
-data_tree_RF <- data_full_cleaned%>%
-  filter(res.IRM != "aucun" & res.IRM != "aucun mais propose")%>%
-  filter(res.1st.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(les.epi != "douteux")%>%
-  filter(veille.sommeil != "non documente")%>%
+data_reg_log <- data_full_cleaned%>%
   mutate(dx.dicho = ifelse(dx.event != "Epilepsy" | is.na(dx.event), "non-epileptic", "epileptic"),
-         les.epi = ifelse(les.epi == "lesion epileptogene", "epileptogenic lesion", "no epileptogenic lesion"),
-         EEG.result_resume = ifelse(is.na(EEG.result_resume) | EEG.result_resume == "slow", "no spikes", "spikes"))%>%
-  select(code.pat, dx.dicho, les.epi, EEG.result_resume, veille.sommeil)
+         EEG = case_when(!is.na(EEG.result_resume) ~ EEG.result_resume,
+                         res.1st.EEG == "aucun" | res.1st.EEG == "aucun mais propose" ~ "aucun",
+                         TRUE ~ "normal"),
+         les.epi = ifelse(les.epi == "aucun", NA, les.epi),
+         status.neuro = ifelse(status.neuro == "aucun" | status.neuro == "aucun mais propose", NA, status.neuro),
+         veille.sommeil = ifelse(veille.sommeil == "non documente", NA, veille.sommeil),
+         EEG = ifelse(EEG == "aucun", NA, EEG),
+         atcd.famille = ifelse(atcd.famille == "aucun/autre", "aucun", atcd.famille),
+         dx.dicho = as.factor(dx.dicho),
+         genre = as.factor(genre),
+         atcd.famille = as.factor(atcd.famille),
+         EEG = as.factor(EEG),
+         les.epi = as.factor(les.epi),
+         status.neuro = as.factor(status.neuro),
+         veille.sommeil = as.factor(veille.sommeil))%>%
+  select(code.pat, dx.dicho, age, genre, atcd.famille, EEG, les.epi, status.neuro, veille.sommeil)
 
-# P of being epileptic without other information
-data_tree_RF%>%
-  group_by(dx.dicho)%>%
-  summarise(N = n())
+mod_log <- glm(dx.dicho ~ age + genre + atcd.famille + EEG + les.epi + status.neuro + veille.sommeil, family = "binomial", data = data_reg_log)
 
-# P of being epileptic given MRI results
-data_tree_RF%>%
-  group_by(les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion")
+Anova_reg_log <- as.data.frame(Anova(mod_log))
+anova_reg_log <- as.data.frame(anova(mod_log))
+anova_reg_log <- anova_reg_log[2:nrow(anova_reg_log),]
 
-data_tree_RF%>%
-  group_by(les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion")
-
-# P of being epileptic given MRI and std EEG results
-data_tree_RF%>%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "no spikes")
-
-data_tree_RF%>%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "spikes")
-
-data_tree_RF%>%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "no spikes")
-
-data_tree_RF%>%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "spikes")
-
-# P of being epileptic given MRI, std EEG results and time of the event
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "no spikes", veille.sommeil == "veille")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "no spikes", veille.sommeil == "sommeil")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "spikes", veille.sommeil == "veille")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion", EEG.result_resume == "spikes", veille.sommeil == "sommeil")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "no spikes", veille.sommeil == "veille")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "no spikes", veille.sommeil == "sommeil")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "spikes", veille.sommeil == "veille")
-
-data_tree_RF%>%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "epileptogenic lesion", EEG.result_resume == "spikes", veille.sommeil == "sommeil")
+res_reg_log <- cbind(anova_reg_log, Anova_reg_log)
+res_reg_log <- res_reg_log[,-6]
+res_reg_log$Predictor <- row.names(res_reg_log)
+res_reg_log <- res_reg_log%>%
+  arrange(desc(Deviance))%>%
+  mutate(Deviance = round(Deviance, 2),
+         `Resid. Dev` = round(`Resid. Dev`,2),
+         `LR Chisq` = round(`LR Chisq`,2),
+         `Pr(>Chisq)` = round(`Pr(>Chisq)`, 3),
+         `Pr(>Chisq)` = ifelse(`Pr(>Chisq)` < 0.001, "<0.001", `Pr(>Chisq)`))%>%
+  select(Predictor, Df, Deviance, `Resid. Df`, `Resid. Dev`, `LR Chisq`, `Pr(>Chisq)`)
 
 ```
 
-**END Probability tree based on the three best factors explained by the model**
+To determine how much each clinical and paraclinical information contribute to the elaboration of the diagnosis, a logistic regression was performed, including as dependent variable the diagnosis (epileptic/not epileptic), and as predictors the patient's age, its gender, the familial history, results of the standard EEG (spikes/slow/spikes and slow/ normal), the presence of an epileptogenic lesion (normal/uncertain/epileptogenic lesion/non-epileptogenic lesion), the results or the neuro status (normal/abnormal), and if the event happened during wake or sleep. Results (see Table X) show that the presence of an epileptogenic lesion and the results of the EEG predict the best the diagnosis. All factor seem to play a role, except for the results of the status neuro and the familial history for which no main effect were highlighted.
 
+`r kable(res_reg_log)`
 
-### Yield of the LT EEG in the diagnosis of epilepsy
+### Estimation of the yield of LT-EEG over stndard EEG
 
-```{r LT-EEG classifier}
-# Data importation 
-data_RF_outcome_single_tree_LT(data_full_cleaned)
-
-# prediction on all variable except LT EEG
-data_RF_wo_LT <- data_RF%>%
-  select(-lt_eeg)
-data_RF_train_wo_LT <- data_RF_train%>%
-  select(-lt_eeg)
-data_RF_test_wo_LT <- data_RF_test%>%
-  select(-lt_eeg)
-
-# Model without the LT EEG
-model_wo_LT <- randomForest(res.dx.final ~ ., data = data_RF_train_wo_LT, ntree = 2000)
-prediction_wo_LT <- predict(model_wo_LT, newdata = data_RF_test_wo_LT, type = "class")
-conf_mat_wo_LT <- table(prediction_wo_LT, labels_final_test_RF)
-acc_wo_lt <- round(mean(prediction_wo_LT == labels_final_test_RF),4)*100
-
-gini_wo_LT <- importance(model_wo_LT)
-gini_wo_LT <- data.frame(rownames(gini_wo_LT), gini_wo_LT)
-gini_wo_LT$MeanDecreaseGini <- round(gini_wo_LT$MeanDecreaseGini,2) 
-gini_wo_LT <- arrange(gini_wo_LT,desc(MeanDecreaseGini))
-
-# Model with the LT EEG
-model_w_LT <- randomForest(res.dx.final ~ ., data = data_RF_train, ntree = 2000)
-prediction_w_LT <- predict(model_w_LT, newdata = data_RF_test, type = "class")
-conf_mat_w_LT <- table(prediction_w_LT, labels_final_test_RF)
-acc_w_lt <- round(mean(prediction_w_LT == labels_final_test_RF),4)*100
-
-gini_w_LT <- importance(model_w_LT)
-gini_w_LT <- data.frame(rownames(gini_w_LT), gini_w_LT)
-gini_w_LT$MeanDecreaseGini <- round(gini_w_LT$MeanDecreaseGini,2) 
-gini_w_LT <- arrange(gini_w_LT,desc(MeanDecreaseGini))
-
-```
-
-
-To overcome this difficulty, we proposed to include the same patients as for the first predictive model, but filtering only patients with a LT EEG (N = `r nrow(data_RF)`). 
-
-`r  kable(gini_wo_LT)` `r kable(gini_w_LT)` 
-
-*Table 9: Mean Decrease Gini of two Random Forest algorithms. The first one does not include the results of the LT EEG as a predictor while the second one does.*
-
-The accuracy of the model which did not include the results of the LT EEG among the predictors is `r acc_wo_lt`%. The model including the LT EEG results performed much better, with an accuracy rate of `r acc_w_lt`%, which suggests an impressive yield in the predictive abilities of the model by `r acc_w_lt-acc_wo_lt`%. 
-
-
-
-
-A REGARDER DEMAIN AVEC LES IDEES CLAIRES
-```{r}
-temp <- data_full_cleaned%>%
-  filter(pointes.1st.EEG != "focale" & pointes.1st.EEG != "diffuse" & res.1st.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(pointes.lt.EEG != "focale" & pointes.lt.EEG != "diffuse" & res.lt.EEG != "aucun" & res.lt.EEG != "aucun mais propose")%>%
-  filter(les.epi == "normal" | les.epi == "lesion non epileptogene")%>%
-  filter(res.IRM != "aucun" & res.IRM != "aucun mais propose")
-
-data_full_cleaned%>%filter(res.1st.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(EEG.result_resume == "slow" | is.na(EEG.result_resume))%>%
-  filter(res.lt.EEG != "aucun" & res.lt.EEG != "aucun mais propose")%>%
-  filter(EEG.lt.result_resume == "slow" | is.na(EEG.lt.result_resume))%>%
-  filter(res.IRM != "aucun" & res.IRM != "aucun mais propose")%>%
-  filter(les.epi != "lesion epileptogene")%>%
-  select(pointes.1st.EEG, pointes.lt.EEG, res.IRM, les.epi)%>%
-  filter(les.epi == "douteux")
-
-
-data_tree_exams <- data_full_cleaned%>%
-  filter(res.IRM != "aucun" & res.IRM != "aucun mais propose")%>%
-  filter(res.1st.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(res.lt.EEG != "aucun" & res.1st.EEG != "aucun mais propose")%>%
-  filter(les.epi != "douteux")%>%
+```{r interest of LT EEG}
+data_LT_over_std <- data_full_cleaned%>%
   mutate(dx.dicho = ifelse(dx.event != "Epilepsy" | is.na(dx.event), "non-epileptic", "epileptic"),
-         les.epi = ifelse(les.epi == "lesion epileptogene", "epileptogenic lesion", "no epileptogenic lesion"),
-         EEG.result_resume = ifelse(is.na(EEG.result_resume) | EEG.result_resume == "slow", "no spikes", "spikes"),
-         EEG.lt.result_resume = ifelse(is.na(EEG.lt.result_resume) | EEG.lt.result_resume == "slow", "no spikes", "spikes"))%>%
-  select(code.pat, dx.dicho, les.epi, EEG.result_resume, EEG.lt.result_resume, pointes.1st.EEG, pointes.lt.EEG, dx.event)
+         EEG = case_when(!is.na(EEG.result_resume) ~ EEG.result_resume,
+                         res.1st.EEG == "aucun" | res.1st.EEG == "aucun mais propose" ~ "aucun",
+                         TRUE ~ "normal"),
+         les.epi = ifelse(les.epi == "aucun", NA, les.epi),
+         status.neuro = ifelse(status.neuro == "aucun" | status.neuro == "aucun mais propose", NA, status.neuro),
+         veille.sommeil = ifelse(veille.sommeil == "non documente", NA, veille.sommeil),
+         EEG = ifelse(EEG == "aucun", NA, EEG),
+         atcd.famille = ifelse(atcd.famille == "aucun/autre", "aucun", atcd.famille),
+         EEG_LT = case_when(!is.na(EEG.lt.result_resume) ~ EEG.lt.result_resume,
+                            res.lt.EEG == "aucun" | res.lt.EEG == "aucun mais propose" ~ "aucun",
+                            TRUE ~ "normal"),
+         dx.dicho = as.factor(dx.dicho),
+         genre = as.factor(genre),
+         atcd.famille = as.factor(atcd.famille),
+         EEG = as.factor(EEG),
+         les.epi = as.factor(les.epi),
+         status.neuro = as.factor(status.neuro),
+         veille.sommeil = as.factor(veille.sommeil))%>%
+  filter(res.lt.EEG != "aucun", res.lt.EEG != "aucun mais propose")%>%
+  select(code.pat, dx.dicho, EEG_LT, age, genre, atcd.famille, EEG, les.epi, status.neuro, veille.sommeil)
 
-data_tree_exams%>%
-  group_by(EEG.lt.result_resume, EEG.result_resume, les.epi,dx.dicho)%>%
-  summarise(N = n())%>%
-  filter(les.epi == "no epileptogenic lesion" & EEG.result_resume == "no spikes" & EEG.lt.result_resume == "no spikes")
+
+# Logistic regression model with the LT EEG information
+
+mod_w_LT <- glm(dx.dicho ~ EEG_LT + age + genre + atcd.famille + EEG + les.epi + status.neuro + veille.sommeil, family = "binomial", data = data_LT_over_std)
+
+
+# Results table
+
+Anova_reg_log_LT <- as.data.frame(Anova(mod_w_LT))
+anova_reg_log_LT <- as.data.frame(anova(mod_w_LT))
+anova_reg_log_LT <- anova_reg_log_LT[2:nrow(anova_reg_log_LT),]
+
+res_reg_log_LT <- cbind(anova_reg_log_LT, Anova_reg_log_LT)
+res_reg_log_LT <- res_reg_log_LT[,-6]
+res_reg_log_LT$Predictor <- row.names(res_reg_log_LT)
+res_reg_log_LT <- res_reg_log_LT%>%
+  arrange(desc(Deviance))%>%
+  mutate(Deviance = round(Deviance, 2),
+         `Resid. Dev` = round(`Resid. Dev`,2),
+         `LR Chisq` = round(`LR Chisq`,2),
+         `Pr(>Chisq)` = round(`Pr(>Chisq)`, 3),
+         `Pr(>Chisq)` = ifelse(`Pr(>Chisq)` < 0.001, "<0.001", `Pr(>Chisq)`))%>%
+  select(Predictor, Df, Deviance, `Resid. Df`, `Resid. Dev`, `LR Chisq`, `Pr(>Chisq)`)
+
 
 ```
+
+A second logistic regression model aimed at assessing the relevance of the overnight EEG. For this analysis, only patients with a standard and LT-EEG were retained (N = `r nrow(data_LT_over_std)`). The same predictors as the previous model were enterd, adding the LT-EEG information (spikes/slow/spikes and slow/ normal). As shown in Table X, in this particular pool of patients LT-EEG appeard to be the main predictor of the diagnosis, much better than the presence of an epileptogenic lesion. Moreover, only these two parameters appeard to be significantly contributing to the patients diagnosis prediction.
+
+`r kable(res_reg_log_LT)`
 

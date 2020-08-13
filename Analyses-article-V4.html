@@ -400,14 +400,13 @@ summary {
 <li><a href="#long-term-eeg">Long-term EEG</a></li>
 <li><a href="#multimodal-information">Multimodal information</a></li>
 </ul></li>
-<li><a href="#evolution-of-the-diagnosis-over-time">Evolution of the diagnosis over time</a></li>
+<li><a href="#evolution-of-the-diagnosis-over-time-results-in-progress">Evolution of the diagnosis over time (RESULTS IN PROGRESS)</a></li>
 <li><a href="#mortality">Mortality</a></li>
 <li><a href="#relapses">Relapses</a></li>
 <li><a href="#predictive-models">Predictive models</a>
 <ul>
-<li><a href="#logistic-regression">Logistic regression</a></li>
-<li><a href="#a-classifier-to-identify-the-best-predictors-of-epilepsy-diagnosis">A classifier to identify the best predictors of epilepsy diagnosis</a></li>
-<li><a href="#yield-of-the-lt-eeg-in-the-diagnosis-of-epilepsy">Yield of the LT EEG in the diagnosis of epilepsy</a></li>
+<li><a href="#model-predicting-the-diagnosis">Model predicting the diagnosis</a></li>
+<li><a href="#estimation-of-the-yield-of-lt-eeg-over-stndard-eeg">Estimation of the yield of LT-EEG over stndard EEG</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -529,6 +528,9 @@ summary {
 <li><strong>ATCD_specific</strong>: Description of the medical history before the first event, type character</li>
 <li><strong>les.progressive</strong>: For patients who showed a brain lesion, specification if the lesion was progressive or not, type character</li>
 <li><strong>type_EGI</strong>: For patients with generalized epilepsy, specification of the type of generalized epilepsy, type character</li>
+<li><strong>motif_relapse</strong>: For epileptic patients, verification by a MD if relapses are indeed true relapses, type character</li>
+<li><strong>detail_relapse</strong>: For epileptic patients, column indicating the type of relapse, type character</li>
+<li><strong>commentaire_relapse</strong>: Text either describing a comment about the relapse, or the date of the first relapse</li>
 <li><strong>dx.general</strong>: Reformulation of the column dx.final (Epileptic seizure, non-epileptic event, unknown), type character</li>
 <li><strong>dx.event</strong>: Reformulation of the column dx.final (Acute syptomatic seizure, Epilepsy, cardiovascular…), type character</li>
 <li><strong>dx.epi</strong>: Reformulation of the column dx.final and type.epi.final (focal vs. generalized), type character</li>
@@ -615,7 +617,7 @@ N_dx_event &lt;- data_full_cleaned%&gt;%
   summarise(N = n(),
             pct_tot = pct.fun(N,tot_pat),
             pct_non_epi = pct.fun(N,tot_non_epi))</code></pre>
-<p>We included 1011 patients, 441 women, with a mean age of 53.1 (SD= 21.7) years, ranging from 16 to 98. Most patients were finally diagnosed with an epileptic event (57.86%, N = 585/1011), of which 42 suffered from an acute symptomatic seizure (4.15% of the total sample or 7.18% of all patients with an epileptic seizure). The cause was of non-epileptic nature in 34.62% (350/1011) of the cases, of which most had a cardiovascular origin (10.45%; 56/536). A psychogenic origin was diagnosed in 67 subjects (6.63% of the total sample). In 76 patients (7.52%), the causes of the index event remained unknown. The most frequent reasons of lack of diagnosis were a) lost to follow-up, b) patients with undetermined diagnosis were not residents in the Geneva area.</p>
+<p>We included 1011 patients, 441 women, with a mean age of 53.1 (SD= 21.7) years, ranging from 16 to 98. Most patients were finally diagnosed with an epileptic event (N = 585/1011; 57.86%), of which 42 suffered from an acute symptomatic seizure (4.15% of the total sample or 7.18% of all patients with an epileptic seizure). The cause was of non-epileptic nature in 34.62% (350/1011) of the cases, of which most had psychogenic non-epileptic seizures (N = 67/536; 12.5%), except for the “Other” group (N = 144/536; 26.87%). In 76 patients (7.52%), the causes of the index event remained unknown. The most frequent reasons of lack of diagnosis were a) lost to follow-up, b) patients with undetermined diagnosis were not residents in the Geneva area.</p>
 <p><strong>Distribution of the diagnoses in the tree</strong></p>
 <pre class="r"><code>##-----------------------------------------------------------------------
 ##  Creation of the summary tables for each step of the diagnostic tree  
@@ -801,12 +803,13 @@ hist(data_lm_age$age)</code></pre>
 <pre class="r"><code>model_age &lt;- lm(age ~  dx_paste + more_1_event + genre + les.epi, data = data_lm_age)
 vif(model_age)</code></pre>
 <pre><code>##                  GVIF Df GVIF^(1/(2*Df))
-## dx_paste     2.446359  9        1.050956
-## more_1_event 1.030437  1        1.015105
-## genre        1.030562  1        1.015166
-## les.epi      2.340545  4        1.112153</code></pre>
-<p>An ANOVA was performed to investigate age differences among the different diagnoses, the patients for whom the index event was the first one or not, genders, and patients with or without an epileptogenic lesion (observed either at CT or MRI). Results suggest a main effect of diagnosis (F(9) = 20.5 p = &lt;0.001), implying age differences among the different diagnoses, no main effect of the number of events before the index one (F(1) = 1.14 p = 0.286), a main effect of gender (F(1) = 9.46 p = 0.002), suggesting that male patients are significantly older than female patients. Moreover, the model showed a significant main effect of the presence or absence of an epileptogenic lesion (F(4) = 11.65 p = &lt;0.001), suggesting that patients who show epileptogenic lesions tend to be older.</p>
-<pre class="r"><code>temp &lt;- data_full_cleaned%&gt;%
+## dx_paste     2.738804  9        1.057570
+## more_1_event 1.030551  1        1.015160
+## genre        1.031529  1        1.015642
+## les.epi      2.626659  4        1.128302</code></pre>
+<p>Age is known to be a key element to differntiate diagnoses. To investigate age differences, an ANOVA was performed among the different diagnoses. We were also interested in investigating the age differences among patients for whom the index event was the first one or not, differences in genders, and patients with or without an epileptogenic lesion (observed either at CT or MRI). Results suggest a main effect of the different diagnoses (F(9) = 20.5 p = &lt;0.001), implying age differences among the different diagnoses, no main effect of the number of events before the index one (F(1) = 1.14 p = 0.286), a main effect of gender (F(1) = 9.45 p = 0.002), suggesting that male patients are significantly older than female patients. Moreover, the model showed a significant main effect of the presence or absence of an epileptogenic lesion (F(4) = 11.59 p = &lt;0.001), suggesting that patients who show epileptogenic lesions tend to be older. The detailed results and the decomposition of these effects are presented below.</p>
+<pre class="r"><code>sum_history &lt;- sum(!is.na(data_full_cleaned$ATCD_specific))
+temp &lt;- data_full_cleaned%&gt;%
   group_by(ATCD_specific)%&gt;%
   summarise(N = n())%&gt;%
   mutate( ATCD_specific = case_when(ATCD_specific == &#39;aucun&#39; ~ &#39;No comorbidities&#39;,
@@ -815,7 +818,7 @@ vif(model_age)</code></pre>
                                     ATCD_specific == &#39;neurologique&#39; ~ &#39;Neurologic&#39;,
                                     ATCD_specific == &#39;psychiatrique&#39; ~ &#39;Psychiatric&#39;))%&gt;%
   filter(!is.na(ATCD_specific))%&gt;%
-  mutate(PCT = pct.fun_n(N, 777))%&gt;%
+  mutate(PCT = pct.fun(N, sum_history))%&gt;%
   rename(`Relevant events in medical history` = ATCD_specific)
 
 N_atcd_positive &lt;- temp%&gt;%filter(`Relevant events in medical history` != &quot;No comorbidities&quot;)%&gt;%summarize(sum(N))
@@ -826,34 +829,34 @@ N_atcd &lt;- temp%&gt;%summarize(sum(N))</code></pre>
 <tr class="header">
 <th align="left">Relevant events in medical history</th>
 <th align="right">N</th>
-<th align="right">PCT</th>
+<th align="left">PCT</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">No comorbidities</td>
 <td align="right">336</td>
-<td align="right">43.24</td>
+<td align="left">43.3%</td>
 </tr>
 <tr class="even">
 <td align="left">Other</td>
 <td align="right">42</td>
-<td align="right">5.41</td>
+<td align="left">5.41%</td>
 </tr>
 <tr class="odd">
 <td align="left">Cardiac</td>
 <td align="right">44</td>
-<td align="right">5.66</td>
+<td align="left">5.67%</td>
 </tr>
 <tr class="even">
 <td align="left">Neurologic</td>
 <td align="right">301</td>
-<td align="right">38.74</td>
+<td align="left">38.79%</td>
 </tr>
 <tr class="odd">
 <td align="left">Psychiatric</td>
 <td align="right">53</td>
-<td align="right">6.82</td>
+<td align="left">6.83%</td>
 </tr>
 </tbody>
 </table>
@@ -909,8 +912,13 @@ N_pat_tumor &lt;- data_full_cleaned%&gt;%
 # post_hocs on the lm ANOVA investigating age differences among diagnoses
 post_hoc_dx &lt;- emmeans(model_age, list(pairwise ~ dx_paste), adjust = &quot;tukey&quot;)
 post_hoc_dx &lt;- as.data.frame(post_hoc_dx$`pairwise differences of dx_paste`)
-post_hoc &lt;- report_emmeans(post_hoc_dx)</code></pre>
-<p>If the event occurred during sleep, it was more likely to be of epileptic origin (X2 = 15.07; p&lt;0.001). Seizures occurred during sleep in 13.89% (N = 66/475) of the cases, and 78.79% (N = 52/66) of these patients had later confirmed epilepsy. 384/1011 (37.98%) had SE, i.e. 80.6% (384/475) of all epilepsy patients. Among the epileptic patients, 137/384 (35.68%) were diagnosed with a tumor and were operated. Non-lesional focal epilepsy affected 60 patients (5.93% of all patients, or 12.63% of epileptic patients). The mean age (46.5, SD = 21.7) was lower than that of SE patients (Mean = 58.4; SD = 19.6), but the difference did not reach significance (t(918) = 1.54; p = 0.875). Because only patients older than 16 years were included, we diagnosed IGE only in 31 patients (3.07% of all patients or 6.53% of epileptic patients, mean age: 26.35; SD = 10.83 ). The most frequent syndrome was juvenile myoclonic epilepsy (N = 13) and grand mal on awakening (N = 3). In 17 patients, the precise syndrome was not clear despite generalized epileptogenic abnormalities in the EEG, except for one patient with normal EEG but strongly suggestive semiology. Not surprisingly, the IGE group was significantly younger than the group of patients with focal epilepsy (IGE vs. SE: t(918) = -5.5; p &lt;0.001; IGE vs. NLE: t(918) = -4.08; p = 0.002).</p>
+post_hoc &lt;- report_emmeans(post_hoc_dx)
+
+juv_myo &lt;- 13
+grand_mal_awa &lt;- 3
+tot_IGE &lt;- nrow(data_full_cleaned%&gt;%filter(dx.epi == &quot;Primary generalized epilepsy&quot;))
+non_classifiable &lt;- tot_IGE - juv_myo - grand_mal_awa</code></pre>
+<p>If the event occurred during sleep, it was more likely to be of epileptic origin (X2 = 15.07; p&lt;0.001). Seizures occurred during sleep in 13.89% (N = 66/475) of the cases, and 78.79% (N = 52/66) of these patients had later confirmed epilepsy. 384/1011 (37.98%) had SE, i.e. 80.6% (384/475) of all epilepsy patients. Among the epileptic patients, 137/384 (35.68%) were diagnosed with a tumor and were operated. Non-lesional focal epilepsy affected 60 patients (5.93% of all patients, or 12.63% of epileptic patients). The mean age (46.5, SD = 21.7) was lower than that of SE patients (Mean = 58.4; SD = 19.6), but the difference did not reach significance (t(918) = 1.4; p = 0.929). Because only patients older than 16 years were included, we diagnosed IGE only in 31 patients (3.07% of all patients or 6.53% of epileptic patients, mean age: 26.35; SD = 10.83 ). The most frequent syndrome was juvenile myoclonic epilepsy (N = 13) and grand mal on awakening (N = 3). In 15 patients, the precise syndrome was not clear despite generalized epileptogenic abnormalities in the EEG, except for one patient with normal EEG but strongly suggestive semiology. Not surprisingly, the IGE group was significantly younger than the group of patients with focal epilepsy (IGE vs. SE: t(918) = -5.33; p &lt;0.001; IGE vs. NLE: t(918) = -4.05; p = 0.002).</p>
 </div>
 <div id="psychogenic-origin" class="section level3">
 <h3>Psychogenic origin</h3>
@@ -932,7 +940,7 @@ temp &lt;- data_full_cleaned%&gt;%
 
 N_H_psy &lt;- temp$N[temp$genre == &quot;H&quot;]
 N_psy &lt;- sum(temp$N)</code></pre>
-<p>In 67 patients, seizures were of psychogenic origin (6.63% of the whole sample). These patients were significantly younger than those from the other groups (mean age: 38.06; SD = 16.78), i.e. the cardiac group (t(918) = 5.91; p &lt;0.001), the cardiovascular group (t(918) = 6.61; p &lt;0.001), SE (t(918) = 4.53; p &lt;0.001) and compared to the other diagnoses (t(918) = 4.52; p &lt;0.001). Even though women were significantly more likely to have psychogenic non-epileptic seizures (t(919) = 2.78; p = 0.005) compared to other non-epileptic diagnoses, men also presented psychogenic events (40.3%, N = 27/67).</p>
+<p>In 67 patients, seizures were of psychogenic origin (6.63% of the whole sample). These patients were significantly younger than those from the other groups (mean age: 38.06; SD = 16.78), i.e. the cardiac group (t(918) = 5.87; p &lt;0.001), the cardiovascular group (t(918) = 6.6; p &lt;0.001), SE (t(918) = 4.33; p &lt;0.001) and compared to the other diagnoses category (t(918) = 4.5; p &lt;0.001). Even though women were significantly more likely to have psychogenic non-epileptic seizures (t(919) = 2.78; p = 0.005) compared to other non-epileptic diagnoses, men are also well represented in this group (N = 27/67; 40.3%).</p>
 </div>
 <div id="cardiovascular-origin" class="section level3">
 <h3>Cardiovascular origin</h3>
@@ -973,7 +981,7 @@ types_cardiovasc &lt;- data_full_cleaned%&gt;%
                    type.cardiovasculaire == &quot;multifactoriel&quot; ~ &quot;Multifactorial&quot;,
                    type.cardiovasculaire == &quot;symptomes post-AVC&quot; ~ &quot;Post-stroke symptoms&quot;,
                    type.cardiovasculaire == &quot;syncope&quot; ~ &quot;Syncope&quot;))</code></pre>
-<p>Not surprisingly, patients (N= 56) were on average significantly older than the vasovagal and orthostatic syncope group (t(918) = 4.22; p = 0.001), the NLE group (t(918) = 4.03; p = 0.002), the IGE group (t(918) = 7.28; p &lt;0.001), as well as the psychogenic group (t(918) = 6.61; p &lt;0.001). In most of the patients (94.34%) of the patients, no prior cardiac problems were reported. The mean age of these patients was 65.07 (SD = 23.22), with 35.71% younger than 60 years (range: 18 to 96 years old).</p>
+<p>Not surprisingly, patients (N= 56) were on average significantly older than the vasovagal and orthostatic syncope group (t(918) = 4.22; p = 0.001), the NLE group (t(918) = 4.03; p = 0.002), the IGE group (t(918) = 7.26; p &lt;0.001), as well as the psychogenic group (t(918) = 6.6; p &lt;0.001). In most of the patients (94.34%), no prior cardiac problems were reported. The mean age of these patients was 65.07 (SD = 23.22), with 35.71% younger than 60 years (range: 18 to 96 years old).</p>
 <table>
 <thead>
 <tr class="header">
@@ -1004,7 +1012,7 @@ types_cardiovasc &lt;- data_full_cleaned%&gt;%
 </div>
 <div id="vaso-vagal-and-orthostatic-syncopes" class="section level3">
 <h3>Vaso-vagal and orthostatic syncopes</h3>
-<p>Overall, 6.53% of the patients in the total sample were diagnosed with non-cardiac syncopes. Predictably, they were significantly younger than those with cardiac syncopes (t(918) = 4.32; p &lt;0.001). Long post-syncope confusion, the notion of clonic or asymmetric movements, or certain comorbidities affecting the CNS required in-depth investigations.</p>
+<p>Overall, 6.53% of the patients in the total sample were diagnosed with non-cardiac syncopes. Predictably, they were significantly younger than those with cardiac syncopes (t(918) = 4.3; p &lt;0.001). Long post-syncope confusion, the notion of clonic or asymmetric movements, or certain comorbidities affecting the CNS required in-depth investigations.</p>
 </div>
 </div>
 <div id="diagnostic-tools" class="section level2">
@@ -1031,7 +1039,7 @@ N_les_epi &lt;- data_full_cleaned%&gt;%
   summarise(N = n())
 
 N_normal_epi &lt;- N_les_epi$N[N_les_epi$les.epi == &quot;normal&quot;]+N_les_epi$N[N_les_epi$les.epi == &quot;lesion non epileptogene&quot;]</code></pre>
-<p>Among all patients, 262 had a normal MRI or showed benign abnormalities (few small white matter lesions, developmental venous abnormalities, etc), while 59 epileptic patients showed normal or non-epileptogenic lesions. 69 of the 651 patients with an MRI (10.6%) belonged to the intermediate category. Among the epileptic patients, the proportion is relatively similar (10.51% or 35 of the 333 patients). Regarding age, patients with an epileptogenic lesion and intermediate lesion were significantly older than the patients without lesion (epileptogenic lesion: t(918) = 4.7; p &lt;0.001; intermediate: t(918) = 5.42; p &lt;0.001).</p>
+<p>Among all patients, 262 had a normal MRI or showed benign abnormalities (few small white matter lesions, developmental venous abnormalities, etc), while 59 epileptic patients showed normal or non-epileptogenic lesions. 69 of the 651 patients with an MRI (10.6%) belonged to the intermediate category. Among the epileptic patients, the proportion was relatively similar (10.51% or 35 of the 333 patients). Regarding age, patients with an epileptogenic lesion and intermediate lesion were significantly older than the lesion free patients (epileptogenic lesion: t(918) = 4.71; p &lt;0.001; intermediate: t(918) = 5.45; p &lt;0.001).</p>
 </div>
 <div id="standard-eeg" class="section level3">
 <h3>Standard EEG</h3>
@@ -1133,7 +1141,7 @@ data_chi &lt;- as.data.frame(data_chi, row.names =rownames)
 data_chi &lt;- as.data.frame(data_chi, row.names =rownames)
 
 chi2_EEG_epi &lt;- chisq.test(data_chi, simulate.p.value = T)</code></pre>
-<p>In 122 epileptic patients (over 472 who underwent an EEG; 25.85%), the EEG showed epileptiform abnormalities, and in another 203 (43.01%) unspecific abnormalities were identified, leaving 147 (31.14%) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in 692 (76.21%) out of 908 patients for whom the timing information could be retrieved, the standard EEG was done within 24h. 5.95% (N = 54/908) of the EEG were realised between 24 and 48h, while 2.42% (N = 22/908) were done between 48h and 72h, and the reminder 15.42% (N = 140/908) after 72h. There was no difference in the occurrence of epileptiform or any abnormal finding between the different delays of the whole group (X2 = 8.16; p = 0.086) or of the group of epileptic patients taken separately (X2 = 6.13; p = 0.177).</p>
+<p>In 122 epileptic patients (over 472 who underwent an EEG; 25.85%), the EEG showed epileptiform abnormalities, and in another 203 (43.01%) unspecific abnormalities were identified, leaving 147 (31.14%) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in 692 (76.21%) out of 908 patients for whom the timing information could be retrieved, the standard EEG was done within 24h. 5.95% (N = 54/908) of the EEG were realised between 24 and 48h, while 2.42% (N = 22/908) were done between 48h and 72h, and the reminder 15.42% (N = 140/908) after 72h. There was no difference in the occurrence of epileptiform abnormalities between the different delays for the whole group (X2 = 8.16; p = 0.093) or for the group of epileptic patients taken separately (X2 = 6.13; p = 0.194).</p>
 <pre class="r"><code>temp &lt;- data_full_cleaned%&gt;%filter(dx.event != &quot;Epilepsy&quot; | is.na(dx.event))%&gt;%
   filter(EEG.result_resume == &quot;pointes&quot; | EEG.result_resume == &quot;pointes+slow&quot;)%&gt;%
   group_by(dx.general, dx.event, dx.epi)%&gt;%
@@ -1150,9 +1158,10 @@ N_spikes_not_epi_lt_normal &lt;- nrow(data_full_cleaned%&gt;%
            EEG.result_resume == &quot;pointes+slow&quot;)%&gt;%
   filter(dx.event != &quot;Epilepsy&quot; &amp; dx.event != &quot;Acute symptomatic seizure&quot; &amp; dx.event != &quot;Unknown&quot;)%&gt;%
     filter(res.lt.EEG == &quot;normal&quot;)%&gt;%
-  select(code.pat, date.1st.cs.su, date.1st.EEG, res.1st.EEG, EEG.result_resume,  date.lt.EEG, res.lt.EEG, EEG.lt.result_resume, dx.final, type.epi.final, type.autre.final))</code></pre>
-<p>Except from acute symptomatic seizures (N = 7) unknown diagnosis (N= 2) and unknown epilepsy type (N = 7), epileptiform abnormalities were found in 5 patients out of 536 without a diagnosis of epilepsy on the standard EEG, corresponding to 0.93% of false positive results. For 2 of them, the LT EEG was normal and the epileptogenic abnormality (sharper slow waves in all cases) was not confirmed. Regarding the 4 <em>(!!!fixed number !!!!)</em> other cases, LT EEG was either refused or not proposed to the patient, but the observed epileptiform discharges location was not concordant with the semiology of the event, leading to the exclusion of the diagnosis of epilepsy despite the observed electrical abnormalities.</p>
-<p>Note: check corrections Pia</p>
+  select(code.pat, date.1st.cs.su, date.1st.EEG, res.1st.EEG, EEG.result_resume,  date.lt.EEG, res.lt.EEG, EEG.lt.result_resume, dx.final, type.epi.final, type.autre.final))
+
+rest_non_epi_spikes &lt;- N_spikes_not_epi-N_spikes_not_epi_lt_normal</code></pre>
+<p>Except from acute symptomatic seizures (N = 7) unknown diagnosis (N= 2) and unknown epilepsy type (N = 7), elements interpreted as epileptiform abnormalities were found in five patients out of 536 without a diagnosis of epilepsy on the standard EEG, corresponding to 0.93% of false positive results. For two of them, the LT EEG was normal and the epileptogenic abnormality (sharper slow waves in all cases) was not confirmed. Regarding the three other cases, LT EEG was either refused or not proposed to the patient, but the observed epileptiform discharges location was not concordant with the semiology of the event, leading to the exclusion of the diagnosis of epilepsy despite the observed electrical abnormalities.</p>
 </div>
 <div id="long-term-eeg" class="section level3">
 <h3>Long-term EEG</h3>
@@ -1186,7 +1195,7 @@ N_LT_EEG_norm_std_spikes &lt;- nrow(data_full_cleaned%&gt;%
        filter(EEG.result_resume == &quot;slow&quot; | res.1st.EEG == &quot;normal&quot;)%&gt;%
          filter(res.lt.EEG != &quot;aucun&quot; &amp; res.lt.EEG != &quot;aucun mais propose&quot;)%&gt;%
          filter(EEG.lt.result_resume == &quot;pointes&quot; | EEG.lt.result_resume == &quot;pointes+slow&quot;))</code></pre>
-<p>239 patients underwent LTM-EEG. Overall, 67 patients (28.03%) showed epileptiform discharges, and 59 (88.06%) of them were finally diagnosed with epilepsy. Among the remaining 8, two of them were diagnosed as acute symptomatic seizures, and for two others, the pathological nature of the anomalies remained uncertain. Of the patients with epilepsy but normal EEG or non-epileptogenic abnormalities at the standard EEG (N = 350), 77 (22%) underwent LTM-EEG which identified epileptiform discharges in an additional 39 patients (50.65%).</p>
+<p>239 patients underwent LTM-EEG. Overall, 67 patients (28.03%) showed epileptiform discharges, and 59 (88.06%) of them were finally diagnosed with epilepsy. Among the remaining eight, two of them were diagnosed as acute symptomatic seizures, and for two others, the pathological nature of the anomalies remained uncertain. Of the patients with epilepsy but normal EEG or non-epileptogenic abnormalities at the standard EEG (N = 350), 77 (22%) underwent LTM-EEG which identified epileptiform discharges in an additional 39 patients (50.65%).</p>
 </div>
 <div id="multimodal-information" class="section level3">
 <h3>Multimodal information</h3>
@@ -1222,9 +1231,7 @@ N_pat_all_normal_epi_lt_mri &lt;- nrow(data_full_cleaned%&gt;%
   filter(les.epi == &quot;normal&quot; | les.epi == &quot;lesion non epileptogene&quot;)%&gt;%
   filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)%&gt;%
   filter(dx.event == &quot;Epilepsy&quot;))</code></pre>
-<p>While routine EEG, MRI and LTM-EEG are the hallmark exams to diagnose epilepsy, we were wondering what the combined yield is. Among patients with all three negative exams (N = 76), seven patients were nevertheless diagnosed with epilepsy (9.21% without taking into account the 15 patients with intermediate lesions). If only MRI and long-term EEG are negative, this number rises to nine i.e. two patients (0.42% of the group of epileptic patients) would be incorrectly diagnosed as non-epileptic.</p>
-<p>These patients presented a semiology…</p>
-<p>Note: Add a probability tree with the three exams to see probabilities among the different exams</p>
+<p>While routine EEG, MRI and LTM-EEG are the hallmark exams to diagnose epilepsy, we were wondering what the combined yield is. Among patients with all three negative exams (N = 77), eight patients were nevertheless diagnosed with epilepsy (10.39% without taking into account the 15 patients with intermediate lesions). If only MRI and long-term EEG are negative, this number rises to ten i.e. two patients (0.42% of the group of epileptic patients) would be incorrectly diagnosed as non-epileptic. One of these patients presented a focal seizure revealing itself by an episode of transient global amnesia while the second one consulted for a generalized tonic clonic seizure starting by aphasic symptoms (tip of the tongue) (IMPROVE DESCRIPTION).</p>
 <pre class="r"><code>data_tree_exams &lt;- data_full_cleaned%&gt;%
   filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)%&gt;%
   filter(res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
@@ -1258,7 +1265,7 @@ data_tree_exams%&gt;%
 ## # Groups:   les.epi [1]
 ##   les.epi                 dx.dicho          N
 ##   &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 no epileptogenic lesion epileptic        50
+## 1 no epileptogenic lesion epileptic        51
 ## 2 no epileptogenic lesion non-epileptic    86</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(les.epi,dx.dicho)%&gt;%
@@ -1268,7 +1275,7 @@ data_tree_exams%&gt;%
 ## # Groups:   les.epi [1]
 ##   les.epi              dx.dicho          N
 ##   &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 epileptogenic lesion epileptic        88
+## 1 epileptogenic lesion epileptic        87
 ## 2 epileptogenic lesion non-epileptic    26</code></pre>
 <pre class="r"><code># Probability of being epileptic according to epileptogenic lesion and Std EEG
 data_tree_exams%&gt;%
@@ -1279,7 +1286,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.result_resume, les.epi [1]
 ##   EEG.result_resume les.epi                 dx.dicho          N
 ##   &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 no spikes         no epileptogenic lesion epileptic        25
+## 1 no spikes         no epileptogenic lesion epileptic        27
 ## 2 no spikes         no epileptogenic lesion non-epileptic    73</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1289,7 +1296,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.result_resume, les.epi [1]
 ##   EEG.result_resume les.epi                 dx.dicho          N
 ##   &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 spikes            no epileptogenic lesion epileptic        25
+## 1 spikes            no epileptogenic lesion epileptic        24
 ## 2 spikes            no epileptogenic lesion non-epileptic    13</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1299,7 +1306,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.result_resume, les.epi [1]
 ##   EEG.result_resume les.epi              dx.dicho          N
 ##   &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 no spikes         epileptogenic lesion epileptic        31
+## 1 no spikes         epileptogenic lesion epileptic        29
 ## 2 no spikes         epileptogenic lesion non-epileptic    23</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1309,7 +1316,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.result_resume, les.epi [1]
 ##   EEG.result_resume les.epi              dx.dicho          N
 ##   &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 spikes            epileptogenic lesion epileptic        57
+## 1 spikes            epileptogenic lesion epileptic        58
 ## 2 spikes            epileptogenic lesion non-epileptic     3</code></pre>
 <pre class="r"><code># Probability of being epileptic according to epileptogenic lesion, Std EEG and LT EEG
 
@@ -1321,7 +1328,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.lt.result_resume, EEG.result_resume, les.epi [1]
 ##   EEG.lt.result_resume EEG.result_resume les.epi              dx.dicho         N
 ##   &lt;chr&gt;                &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;        &lt;int&gt;
-## 1 no spikes            no spikes         no epileptogenic le~ epileptic        7
+## 1 no spikes            no spikes         no epileptogenic le~ epileptic        8
 ## 2 no spikes            no spikes         no epileptogenic le~ non-epilept~    69</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.lt.result_resume, EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1331,7 +1338,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.lt.result_resume, EEG.result_resume, les.epi [1]
 ##   EEG.lt.result_resume EEG.result_resume les.epi              dx.dicho         N
 ##   &lt;chr&gt;                &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;        &lt;int&gt;
-## 1 spikes               no spikes         no epileptogenic le~ epileptic       18
+## 1 spikes               no spikes         no epileptogenic le~ epileptic       19
 ## 2 spikes               no spikes         no epileptogenic le~ non-epilept~     4</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.lt.result_resume, EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1341,7 +1348,7 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.lt.result_resume, EEG.result_resume, les.epi [1]
 ##   EEG.lt.result_resume EEG.result_resume les.epi              dx.dicho         N
 ##   &lt;chr&gt;                &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;        &lt;int&gt;
-## 1 no spikes            no spikes         epileptogenic lesion epileptic       18
+## 1 no spikes            no spikes         epileptogenic lesion epileptic       17
 ## 2 no spikes            no spikes         epileptogenic lesion non-epilept~    23</code></pre>
 <pre class="r"><code>data_tree_exams%&gt;%
   group_by(EEG.lt.result_resume, EEG.result_resume, les.epi,dx.dicho)%&gt;%
@@ -1351,11 +1358,11 @@ data_tree_exams%&gt;%
 ## # Groups:   EEG.lt.result_resume, EEG.result_resume, les.epi [1]
 ##   EEG.lt.result_resume EEG.result_resume les.epi              dx.dicho      N
 ##   &lt;chr&gt;                &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;     &lt;int&gt;
-## 1 spikes               no spikes         epileptogenic lesion epileptic    13</code></pre>
+## 1 spikes               no spikes         epileptogenic lesion epileptic    12</code></pre>
 </div>
 </div>
-<div id="evolution-of-the-diagnosis-over-time" class="section level2">
-<h2>Evolution of the diagnosis over time</h2>
+<div id="evolution-of-the-diagnosis-over-time-results-in-progress" class="section level2">
+<h2>Evolution of the diagnosis over time (RESULTS IN PROGRESS)</h2>
 <pre class="r"><code># Evolution of the diagnosis --&gt; all patients
 delay_dx_all &lt;- data_full_cleaned%&gt;%
   filter(!is.na(date.1st.cs.su),!is.na(date.dx.final))%&gt;%
@@ -1453,8 +1460,157 @@ ggcoxdiagnostics(cox_model, type = , linear.predictions = TRUE)</code></pre>
 <p><img src="data:image/png;base64,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" width="768" /></p>
 <pre class="r"><code>ggcoxdiagnostics(cox_model, type = &quot;deviance&quot;, linear.predictions = TRUE)</code></pre>
 <p><img src="data:image/png;base64,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" width="768" /></p>
-<pre class="r"><code>#Impact of delay until the patients recieves its final diagnosis and the relapses</code></pre>
-<p>Among all patients the delay between the first episode and the final diagnosis was on average of 39.21 days (SD = 109.8). As shown in Figure X and Table X, a Cox regression showed that epileptic patients (M= 37.67; SD= 115.89) tend to reach their final diagnosis earlier than non-epileptic patients (M = 41.36; SD = 100.81) (ASSUMPTIONS VIOLATED; HOW TO FIX IT ?). Moreover, data show that patients who recieve their final diagnosis faster are less prone to relapse (STATS).</p>
+<pre class="r"><code>#Impact of delay until the patients recieve their final diagnosis and the relapses
+
+
+data_relapse_epi &lt;- data_full_cleaned%&gt;%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.dx.final)%&gt;%
+  mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;Non epileptic&quot;, &quot;Epileptic&quot;), 
+         relapses = case_when(n.tot.recidives == 0 ~ &quot;No relapse&quot;,
+                              dx.dicho == &quot;Non epileptic&quot; &amp; n.tot.recidives &gt; 0 ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;pas de ttt&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok et bonne compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;Probleme de compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok taux infra ou ttt inadequat&quot; ~ &quot;Relapse&quot;,
+                              motif_relapse == &quot;pas de recidives trouvees&quot; ~ &quot;No relapse&quot;,
+                              TRUE ~ &quot;No relapse&quot;),
+         date.dx.final = as_date(date.dx.final),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_dx = date.dx.final - date.1st.cs.su)%&gt;%
+  filter(dx.event == &quot;Epilepsy&quot;,
+         delay_dx != is.na(delay_dx),
+         delay_dx &gt;= 0,
+         delay_dx &lt; 730)
+
+median_delay_epi &lt;- median(data_relapse_epi$delay_dx)
+
+data_chi_epi &lt;- data_relapse_epi%&gt;%
+      mutate(delay_dicho = ifelse(delay_dx &lt; median_delay_epi, &quot;short&quot;, &quot;long&quot;))%&gt;%
+      select(code.pat, relapses, delay_dicho)%&gt;%
+  group_by(relapses, delay_dicho)%&gt;%
+  summarise(N = n())%&gt;%
+  spread(key = delay_dicho, value = N)
+data_chi_epi &lt;- as.data.frame(data_chi_epi[,2:3])
+
+chi_epi &lt;- chisq.test(data_chi_epi) # p-value = 0.2354
+
+
+# Same but taking all patients together
+
+data_relapse_all &lt;- data_full_cleaned%&gt;%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.dx.final)%&gt;%
+  mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;Non epileptic&quot;, &quot;Epileptic&quot;), 
+         relapses = case_when(n.tot.recidives == 0 ~ &quot;No relapse&quot;,
+                              dx.dicho == &quot;Non epileptic&quot; &amp; n.tot.recidives &gt; 0 ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;pas de ttt&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok et bonne compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;Probleme de compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok taux infra ou ttt inadequat&quot; ~ &quot;Relapse&quot;,
+                              motif_relapse == &quot;pas de recidives trouvees&quot; ~ &quot;No relapse&quot;,
+                              TRUE ~ &quot;No relapse&quot;),
+         date.dx.final = as_date(date.dx.final),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_dx = date.dx.final - date.1st.cs.su)%&gt;%
+  filter(delay_dx != is.na(delay_dx),
+         delay_dx &gt;= 0,
+         delay_dx &lt; 730)
+
+median_delay_all &lt;- median(data_relapse_all$delay_dx)
+
+data_chi_all &lt;- data_relapse_all%&gt;%
+  mutate(delay_dicho = ifelse(delay_dx &lt; median_delay_all, &quot;short&quot;, &quot;long&quot;))%&gt;%
+  select(code.pat, relapses, delay_dicho)%&gt;%
+  group_by(relapses, delay_dicho)%&gt;%
+  summarise(N = n())%&gt;%
+  spread(key = delay_dicho, value = N)
+data_chi_all &lt;- as.data.frame(data_chi_all[,2:3])
+
+chi_all &lt;- chisq.test(data_chi_all) # p-value = 0.001249
+
+# Visualization 
+
+plot_all &lt;- data_relapse_all%&gt;%
+  mutate(delay_dicho = ifelse(delay_dx &lt; median_delay_all, &quot;short&quot;, &quot;long&quot;))%&gt;%
+  select(code.pat, relapses, delay_dicho)%&gt;%
+  group_by(relapses, delay_dicho)%&gt;%
+  summarise(N = n())
+
+plot_epi &lt;- data_relapse_epi%&gt;%
+  mutate(delay_dicho = ifelse(delay_dx &lt; median_delay_epi, &quot;short&quot;, &quot;long&quot;))%&gt;%
+  select(code.pat, relapses, delay_dicho)%&gt;%
+  group_by(relapses, delay_dicho)%&gt;%
+  summarise(N = n())
+
+
+plot_all_pat &lt;- plot_all%&gt;%
+  ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+  geom_bar(stat = &quot;identity&quot;, alpha = 0.8)+
+  scale_fill_brewer(palette = &quot;Greens&quot;)+
+  theme_minimal()+
+  labs(x = &quot;Delay first seizure - final diagnosis&quot;, title = &quot;All patients&quot;, fill = &quot;Relapses&quot;)+
+  coord_cartesian(ylim = c(0,135))
+
+plot_epi_pat &lt;- plot_epi%&gt;%
+  ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+  geom_bar(stat = &quot;identity&quot;, alpha = 0.8)+
+  scale_fill_brewer(palette = &quot;Reds&quot;)+
+  theme_minimal()+
+  labs(x = &quot;Delay first seizure - final diagnosis&quot;, title = &quot;Epileptic patients&quot;, fill = &quot;Relapses&quot;)+
+  coord_cartesian(ylim = c(0,135))
+
+fig_delay_dx &lt;- ggarrange(plot_all_pat, plot_epi_pat)
+
+
+# Impact of the treatment delay
+# epi
+
+data_relapse_epi_ttt &lt;- data_full_cleaned%&gt;%
+  select(code.pat, dx.event, dx.epi, type.epi.final, n.tot.recidives, motif_relapse, detail_relapse, date.1st.cs.su, date.debut.tt)%&gt;%
+  mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;Non epileptic&quot;, &quot;Epileptic&quot;), 
+         relapses = case_when(n.tot.recidives == 0 ~ &quot;No relapse&quot;,
+                              dx.dicho == &quot;Non epileptic&quot; &amp; n.tot.recidives &gt; 0 ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;pas de ttt&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok et bonne compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;Probleme de compliance&quot; ~ &quot;Relapse&quot;,
+                              detail_relapse == &quot;ttt ok taux infra ou ttt inadequat&quot; ~ &quot;Relapse&quot;,
+                              motif_relapse == &quot;pas de recidives trouvees&quot; ~ &quot;No relapse&quot;,
+                              TRUE ~ &quot;No relapse&quot;),
+         date.debut.tt = as_date(date.debut.tt),
+         date.1st.cs.su = as_date(date.1st.cs.su),
+         delay_tt = date.debut.tt - date.1st.cs.su)%&gt;%
+  filter(dx.event == &quot;Epilepsy&quot;,
+         delay_tt != is.na(delay_tt),
+         delay_tt &gt;= 0,
+         delay_tt &lt; 730)
+
+median_delay_epi_tt &lt;- median(data_relapse_epi_ttt$delay_tt)
+
+data_chi_epi_tt &lt;- data_relapse_epi_ttt%&gt;%
+      mutate(delay_dicho = ifelse(delay_tt &lt; median_delay_epi_tt, &quot;short&quot;, &quot;long&quot;))%&gt;%
+      select(code.pat, relapses, delay_dicho)%&gt;%
+  group_by(relapses, delay_dicho)%&gt;%
+  summarise(N = n())%&gt;%
+  spread(key = delay_dicho, value = N)
+data_chi_epi_tt &lt;- as.data.frame(data_chi_epi_tt[,2:3])
+
+chi_epi_tt &lt;- chisq.test(data_chi_epi_tt) #  p-value = 0.07186
+
+
+# Vizualisation treatment 
+
+# plot_ttt_epi &lt;- data_relapse_epi_ttt%&gt;%
+#       mutate(delay_dicho = ifelse(delay_tt &lt; median_delay_epi_tt, &quot;short&quot;, &quot;long&quot;))%&gt;%
+#       select(code.pat, relapses, delay_dicho)%&gt;%
+#   group_by(relapses, delay_dicho)%&gt;%
+#   summarise(N = n())
+# 
+# plot_ttt_epi%&gt;%
+#   ggplot(aes(x = delay_dicho, y = N, fill = relapses))+
+#   geom_bar(stat = &quot;identity&quot;)+
+#   scale_fill_brewer(palette = &quot;Blues&quot;)+
+#   theme_minimal()+
+#   labs(x = &quot;Delay first seizure - treatment instauration&quot;, title = &quot;Epileptic patients&quot;, fill = &quot;Relapses&quot;)</code></pre>
+<p>Among all patients the delay between the first episode and the final diagnosis was on average of 39.21 days (SD = 109.8). As shown in Figure X and Table X, a Cox regression showed that epileptic patients (M= 37.67; SD= 115.89) tend to receive their final diagnosis earlier than non-epileptic patients (M = 41.36; SD = 100.81) (ASSUMPTIONS VIOLATED; HOW TO FIX IT ?).</p>
 <table>
 <thead>
 <tr class="header">
@@ -1486,6 +1642,9 @@ ggcoxdiagnostics(cox_model, type = , linear.predictions = TRUE)</code></pre>
 </tbody>
 </table>
 <p><em>Table X: results of the Cox regression investigating the difference in delay between epileptic and non epileptic patients.</em></p>
+<p>Moreover, as shown in Figure X, data across epileptic and non-epileptic patients show that patients who receive their final diagnosis earlier (dichotomization of the delays between short and long based on the median) are less prone to relapse (X2 = 10.42; p = 0.001). Even though the same tendency was found for epileptic patients, the effect did not reach significance (X2 = 1.41; p = 0.235). This might be explained by the fact that epileptic patients were directly treated in the ED. By taking into account the delay between the first seizure and the prescription of a treatment, a marginal tendency appears (X2 = 3.24; p = 0.072).</p>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+<p><em>Figure X: bar plots comparing the proportion of patients who relapsed based on the delay between the first event, and the definition of the final diagnosis. all delays shorter than the median were calssified as short delay, while all delays longer than the median were clasified as long delays.</em></p>
 </div>
 <div id="mortality" class="section level2">
 <h2>Mortality</h2>
@@ -1524,12 +1683,11 @@ rownames(datachi) &lt;- datachi$dx.dicho
 datachi$dx.dicho &lt;- NULL
 
 chi_dead &lt;- chisq.test(datachi) </code></pre>
-<p>Among the entire sample, 114 patients deceased during the two year follow-up (56.38%; mean age = 68.15, 51 females and 63 males). In the epileptic group (N = 82/475; 17.26%), this proportion is significantly larger than in the non-epileptic group (N = 32/536; 5.97%; X2 = 30.98; p&lt;0.001), which is mainly due to patients with epilepsy and dementia or brain tumors. Two epileptic patients died from other causes (one of them from cardiac origin and the other one from severe hypernatremia and infection) and for six patients the cause of the death remained unclear. None of the patients experienced death related directly to an epileptic seizure.</p>
+<p>Among the entire sample, 114 patients deceased during the two year follow-up (11.28%; mean age = 68.15, 51 females and 63 males). In the epileptic group (N = 82/475; 17.26%), this proportion is significantly larger than in the non-epileptic group (N = 32/536; 5.97%; X2 = 30.98; p&lt;0.001), which is mainly due to patients with epilepsy and dementia or brain tumors. Two epileptic patients died from other causes (one of them from cardiac origin and the other one from severe hypernatremia and infection) and for six patients the cause of the death remained unclear. None of the patients experienced death related directly to an epileptic seizure.</p>
 </div>
 <div id="relapses" class="section level2">
 <h2>Relapses</h2>
-<pre><code>## Warning in chisq.test(data_chi): Chi-squared approximation may be incorrect</code></pre>
-<p>Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Some patients after a first non provoked epileptic event sometimes presented an acute symptomatic seizure (N = 4/475; 0.84%). These event wer not retained as relapses. Among all patients, <code>N_relapses_total</code> (24.23%) relapsed. The proportion is higher for epileptic patients (162/475; 34.11%), compared to non epileptic patients (83/536; <code>pct_relapses_non_epi</code>). This proportion was significantly different among the two groups (X2 = 46.54; p&lt;0.001). Among epileptic patients, focal epilepsy patients (153/444; 34.46%)tend to relapse more than generalized epilepsy patients (9/31; 29.03%), however, this difference did not reached significance (X2 = 0.18; p = 0.674). Inside the focal epilepsy group, patient with non lesional epilepsy (32/ 60 ; 53.33%) are significantly most prone to relapse compared to lesional patients(121/384; 31.51%; X2 = 10; p = 0.002). Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (5/17; 29.41%), however, this difference did not reach significance either(X2 = 1.62; p = 0.203). See Table X for a complete description of the relapse rate per diagnosis.</p>
+<p>Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Among all patients, 245 (24.23%) relapsed. The proportion is significantly higher for epileptic patients (N = 162/475; 34.11%), compared to non epileptic patients (N = 83/536; 15.49%; X2 = 46.54; p&lt;0.001). Among epileptic patients, focal epilepsy patients (N = 153/444; 34.46%) tend to relapse more than generalized epilepsy patients (N = 9/31; 29.03%), however, this difference did not reached significance (X2 = 0.18; p = 0.674). Inside the focal epilepsy group, patient with non lesional epilepsy (N = 32/60 ; 53.33%) are significantly most prone to relapse compared to lesional patients (N = 121/384; 31.51%; X2 = 10; p = 0.002). Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (N = 5/17; 29.41%), however, this difference did not reach significance either (X2 = 1.62; p = 0.203). See Table X for a complete description of the relapse rate per diagnosis.</p>
 <table>
 <thead>
 <tr class="header">
@@ -1644,464 +1802,325 @@ chi_dead &lt;- chisq.test(datachi) </code></pre>
 </tr>
 </tbody>
 </table>
+<pre class="r"><code># Table of the reason of relapse among the epileptic patients
+N_epi &lt;- nrow(data_full_cleaned%&gt;%filter(dx.event == &quot;Epilepsy&quot;))
+
+type_relapse_table &lt;- data_full_cleaned%&gt;%
+  filter(dx.event == &quot;Epilepsy&quot;)%&gt;%
+  group_by(detail_relapse)%&gt;%
+  summarise(N = n(),
+            PCT = pct.fun_n(N, N_epi))%&gt;%
+  mutate(detail_relapse = case_when(detail_relapse == &quot;crise provoquee&quot; ~ &quot;Acute symptomatic seizure&quot;,
+                                    detail_relapse == &quot;pas de ttt&quot; ~ &quot;No treatment&quot;,
+                                    detail_relapse == &quot;Probleme de compliance&quot; ~ &quot;Compliance problem&quot;,
+                                    detail_relapse == &quot;ttt ok et bonne compliance&quot; ~ &quot;Adequate treatment and good compliance&quot;,
+                                    detail_relapse == &quot;ttt ok taux infra ou ttt inadequat&quot; ~ &quot;Infra-therapeutic drug-level or suboptimal treatment &quot;,
+                                    is.na(detail_relapse) ~ &quot;no relapse&quot;))
+
+# Acute relapses 
+N_acute &lt;- 4
+OH &lt;- 2
+sevr_ttt &lt;- 2</code></pre>
+<p>Among epileptic patients, we investigated the origin of the first relapse following the first seizure (or the index event in case of non-investigated anterior seizures). As shown in Table X, Results indicate that most commonly, patients relapsed despite an adequate treatment and no compliance problems were reported (N = 56/475; 11.79). Nevertheless, a non negligeable part of the patients seem to relapse during the interval a treatment was instaurated, or refused the prescription of an antiepileptic drug (N = 43/475; 9.05). This stresses again the importance to investigate these patients as swiftly as possible. Interestingly, four patients first presented a non-provoked seizure leading to the diagnosis of epilepsy and and a second one considered as an acute symptomatic seizure. This is particularly the case for patients with alcohool addiction problems (2/4) and drugs withdrawal, such as benzodiazepines (2/4).</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">detail_relapse</th>
+<th align="right">N</th>
+<th align="right">PCT</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Acute symptomatic seizure</td>
+<td align="right">4</td>
+<td align="right">0.84</td>
+</tr>
+<tr class="even">
+<td align="left">No treatment</td>
+<td align="right">43</td>
+<td align="right">9.05</td>
+</tr>
+<tr class="odd">
+<td align="left">Compliance problem</td>
+<td align="right">29</td>
+<td align="right">6.11</td>
+</tr>
+<tr class="even">
+<td align="left">Adequate treatment and good compliance</td>
+<td align="right">56</td>
+<td align="right">11.79</td>
+</tr>
+<tr class="odd">
+<td align="left">Infra-therapeutic drug-level or suboptimal treatment</td>
+<td align="right">34</td>
+<td align="right">7.16</td>
+</tr>
+<tr class="even">
+<td align="left">no relapse</td>
+<td align="right">309</td>
+<td align="right">65.05</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table X: descriptive statistics of the supposed causes of relapses among the epilepsy patients.</em></p>
 </div>
 <div id="predictive-models" class="section level2">
 <h2>Predictive models</h2>
-<div id="logistic-regression" class="section level3">
-<h3>Logistic regression</h3>
-</div>
-<div id="a-classifier-to-identify-the-best-predictors-of-epilepsy-diagnosis" class="section level3">
-<h3>A classifier to identify the best predictors of epilepsy diagnosis</h3>
-<pre class="r"><code>set.seed(2020)
+<div id="model-predicting-the-diagnosis" class="section level3">
+<h3>Model predicting the diagnosis</h3>
+<pre class="r"><code>data_reg_log &lt;- data_full_cleaned%&gt;%
+  mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;non-epileptic&quot;, &quot;epileptic&quot;),
+         EEG = case_when(!is.na(EEG.result_resume) ~ EEG.result_resume,
+                         res.1st.EEG == &quot;aucun&quot; | res.1st.EEG == &quot;aucun mais propose&quot; ~ &quot;aucun&quot;,
+                         TRUE ~ &quot;normal&quot;),
+         les.epi = ifelse(les.epi == &quot;aucun&quot;, NA, les.epi),
+         status.neuro = ifelse(status.neuro == &quot;aucun&quot; | status.neuro == &quot;aucun mais propose&quot;, NA, status.neuro),
+         veille.sommeil = ifelse(veille.sommeil == &quot;non documente&quot;, NA, veille.sommeil),
+         EEG = ifelse(EEG == &quot;aucun&quot;, NA, EEG),
+         atcd.famille = ifelse(atcd.famille == &quot;aucun/autre&quot;, &quot;aucun&quot;, atcd.famille),
+         dx.dicho = as.factor(dx.dicho),
+         genre = as.factor(genre),
+         atcd.famille = as.factor(atcd.famille),
+         EEG = as.factor(EEG),
+         les.epi = as.factor(les.epi),
+         status.neuro = as.factor(status.neuro),
+         veille.sommeil = as.factor(veille.sommeil))%&gt;%
+  select(code.pat, dx.dicho, age, genre, atcd.famille, EEG, les.epi, status.neuro, veille.sommeil)
 
-# Preparation of the data
-data_RF_outcome_single_tree(data_full_cleaned)
+mod_log &lt;- glm(dx.dicho ~ age + genre + atcd.famille + EEG + les.epi + status.neuro + veille.sommeil, family = &quot;binomial&quot;, data = data_reg_log)
 
-# Random forest model
-# Definition of the model
-RF_model &lt;- randomForest(res.dx.final ~ ., data = data_RF_train, 
-                         ntree = 2000)
+Anova_reg_log &lt;- as.data.frame(Anova(mod_log))
+anova_reg_log &lt;- as.data.frame(anova(mod_log))
+anova_reg_log &lt;- anova_reg_log[2:nrow(anova_reg_log),]
 
-# Estimation of the mean decrease gini
-gini &lt;- importance(RF_model)
-gini &lt;- data.frame(rownames(gini), gini)
-gini$MeanDecreaseGini &lt;- round(gini$MeanDecreaseGini,2) 
-gini &lt;- arrange(gini,desc( MeanDecreaseGini))
-
-# Prediction, confusion matrix and accuracy
-prediction &lt;- predict(RF_model, newdata = data_RF_test, type = &quot;class&quot;)
-conf_mat &lt;- table(prediction, labels_final_test_RF)
-acc &lt;- round(mean(labels_final_test_RF == prediction),4)*100
-
-# ROC curve
-# Calculate the probability of new observations belonging to each class
-# prediction_for_roc_curve will be a matrix with dimensions data_set_size x number_of_classes
-prediction_for_roc_curve &lt;- predict(RF_model,data_RF_test,type=&quot;prob&quot;)
-# Use pretty colours:
-pretty_colours &lt;- c(&quot;#F8766D&quot;,&quot;#00BA38&quot;)
-# Specify the different classes 
-classes &lt;- levels(data_RF$res.dx.final)
-# For each class
-save_auc &lt;- as.numeric()
-for (i in 1:2){
-  # Define which observations belong to class[i]
-  true_values &lt;- ifelse(labels_final_test_RF==classes[i],1,0)
-  # Assess the performance of classifier for class[i]
-  pred &lt;- prediction(prediction_for_roc_curve[,i],true_values)
-  perf &lt;- performance(pred, &quot;tpr&quot;, &quot;fpr&quot;)
-  if (i==1)
-  {
-    plot(perf,main=&quot;ROC Curve&quot;,col=pretty_colours[i]) 
-  }
-  else
-  {
-    plot(perf,main=&quot;ROC Curve&quot;,col=pretty_colours[i],add=TRUE) 
-  }
-  # Calculate the AUC and print it to screen
-  auc.perf &lt;- performance(pred, measure = &quot;auc&quot;)
-  save_auc[i] &lt;- auc.perf@y.values
-}
-
-legend(x = 0.8, y= 0.8, legend = classes, fill = pretty_colours, col = pretty_colours)</code></pre>
-<p><img src="data:image/png;base64,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" width="672" /></p>
-<pre class="r"><code>save_auc &lt;- do.call(rbind, save_auc)
-res_auc &lt;- data.frame(classes, save_auc)
-
-# Predictive ability of an MD in the ER
-data_MD &lt;- data_full_cleaned%&gt;%
-  mutate(type.epi.initial = case_when(type.epi.initial == &quot;cryptogenique&quot; ~ &quot;non lesionnelle&quot;,
-                                      type.epi.initial == &quot;focale symptomatique&quot; ~ &quot;lesionnelle&quot;,
-                                      TRUE ~ type.epi.initial))%&gt;%
-  mutate(dx_ini_paste = paste(dx.initial, type.epi.initial),
-         dx_fin_paste = paste(dx.final, type.epi.final))%&gt;%
-  filter(res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(les.epi != &quot;aucun&quot;)%&gt;%
-  filter(status.neuro != &quot;aucun&quot; &amp;  status.neuro != &quot;aucun mais propose&quot; &amp; status.neuro != &quot;non documente&quot;)%&gt;%
-  filter(veille.sommeil != &quot;non documente&quot;)%&gt;%
-  select(dx_ini_paste, dx_fin_paste)
-
-# confusion matrix and accuracy
-conf_mat_MD &lt;- table(data_MD$dx_ini_paste, data_MD$dx_fin_paste)
-acc_MD &lt;- round(mean(data_MD$dx_ini_paste == data_MD$dx_fin_paste),4)*100
-
-N_first_RF_model &lt;- nrow(data_RF)</code></pre>
-<p>The average accuracy of the Random Forest model was 79.03%, while the area under the curve was 0.77 (see the ROC curve in Figure 3). The ability of the model to predict a diagnosis, was 83.58% (56/67) patients correctly classified in the test dataset) of true positive for the epileptic patients and 73.68% (42/15 patients correctly classified in the test dataset) for the non-epileptic patients. As a comparison point, if confronting the initially suggested diagnosis in the ED compared to the final diagnosis after at maximum two years of follow-up, the predictive ability of a clinician in the ED was 73.01% (to predict if a patient is epileptic or not), among which the percentage of true positives for epileptic patients was 0% (0/83 patients correctly classified) and NaN% (0/ 0 patients correctly classified) for non-epileptic patients.</p>
+res_reg_log &lt;- cbind(anova_reg_log, Anova_reg_log)
+res_reg_log &lt;- res_reg_log[,-6]
+res_reg_log$Predictor &lt;- row.names(res_reg_log)
+res_reg_log &lt;- res_reg_log%&gt;%
+  arrange(desc(Deviance))%&gt;%
+  mutate(Deviance = round(Deviance, 2),
+         `Resid. Dev` = round(`Resid. Dev`,2),
+         `LR Chisq` = round(`LR Chisq`,2),
+         `Pr(&gt;Chisq)` = round(`Pr(&gt;Chisq)`, 3),
+         `Pr(&gt;Chisq)` = ifelse(`Pr(&gt;Chisq)` &lt; 0.001, &quot;&lt;0.001&quot;, `Pr(&gt;Chisq)`))%&gt;%
+  select(Predictor, Df, Deviance, `Resid. Df`, `Resid. Dev`, `LR Chisq`, `Pr(&gt;Chisq)`)</code></pre>
+<p>To determine how much each clinical and paraclinical information contribute to the elaboration of the diagnosis, a logistic regression was performed, including as dependent variable the diagnosis (epileptic/not epileptic), and as predictors the patient’s age, its gender, the familial history, results of the standard EEG (spikes/slow/spikes and slow/ normal), the presence of an epileptogenic lesion (normal/uncertain/epileptogenic lesion/non-epileptogenic lesion), the results or the neuro status (normal/abnormal), and if the event happened during wake or sleep. Results (see Table X) show that the presence of an epileptogenic lesion and the results of the EEG predict the best the diagnosis. All factor seem to play a role, except for the results of the status neuro and the familial history for which no main effect were highlighted.</p>
 <table>
 <thead>
 <tr class="header">
-<th align="left">rownames.gini.</th>
-<th align="right">MeanDecreaseGini</th>
+<th align="left">Predictor</th>
+<th align="right">Df</th>
+<th align="right">Deviance</th>
+<th align="right">Resid. Df</th>
+<th align="right">Resid. Dev</th>
+<th align="right">LR Chisq</th>
+<th align="left">Pr(&gt;Chisq)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">les.epi</td>
-<td align="right">19.50</td>
+<td align="right">3</td>
+<td align="right">196.32</td>
+<td align="right">824</td>
+<td align="right">777.64</td>
+<td align="right">188.45</td>
+<td align="left">&lt;0.001</td>
 </tr>
 <tr class="even">
-<td align="left">std_eeg</td>
-<td align="right">10.51</td>
+<td align="left">EEG</td>
+<td align="right">3</td>
+<td align="right">170.77</td>
+<td align="right">827</td>
+<td align="right">973.97</td>
+<td align="right">111.21</td>
+<td align="left">&lt;0.001</td>
 </tr>
 <tr class="odd">
 <td align="left">genre</td>
+<td align="right">1</td>
+<td align="right">7.48</td>
+<td align="right">832</td>
+<td align="right">1145.63</td>
 <td align="right">4.76</td>
+<td align="left">0.029</td>
 </tr>
 <tr class="even">
 <td align="left">veille.sommeil</td>
-<td align="right">2.81</td>
+<td align="right">1</td>
+<td align="right">6.30</td>
+<td align="right">821</td>
+<td align="right">768.94</td>
+<td align="right">6.30</td>
+<td align="left">0.012</td>
 </tr>
 <tr class="odd">
 <td align="left">age</td>
-<td align="right">2.55</td>
+<td align="right">1</td>
+<td align="right">3.14</td>
+<td align="right">833</td>
+<td align="right">1153.11</td>
+<td align="right">5.77</td>
+<td align="left">0.016</td>
 </tr>
 <tr class="even">
 <td align="left">status.neuro</td>
-<td align="right">2.40</td>
+<td align="right">2</td>
+<td align="right">2.41</td>
+<td align="right">822</td>
+<td align="right">775.24</td>
+<td align="right">2.02</td>
+<td align="left">0.364</td>
 </tr>
 <tr class="odd">
 <td align="left">atcd.famille</td>
-<td align="right">2.21</td>
+<td align="right">2</td>
+<td align="right">0.90</td>
+<td align="right">830</td>
+<td align="right">1144.73</td>
+<td align="right">4.41</td>
+<td align="left">0.11</td>
 </tr>
 </tbody>
 </table>
-<p><em>Table 8: Mean Decrease Gini indexes among the predictors. The higher the score, the higher the importance of the factor for the model. The Gini scores are standardized in percent.</em></p>
-<p><strong>Probability tree based on the three best factors explained by the model</strong></p>
-<pre class="r"><code># Decision tree based on the 3 highest mean decrease gini
-data_tree_RF &lt;- data_full_cleaned%&gt;%
-  filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)%&gt;%
-  filter(res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(les.epi != &quot;douteux&quot;)%&gt;%
-  filter(veille.sommeil != &quot;non documente&quot;)%&gt;%
-  mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;non-epileptic&quot;, &quot;epileptic&quot;),
-         les.epi = ifelse(les.epi == &quot;lesion epileptogene&quot;, &quot;epileptogenic lesion&quot;, &quot;no epileptogenic lesion&quot;),
-         EEG.result_resume = ifelse(is.na(EEG.result_resume) | EEG.result_resume == &quot;slow&quot;, &quot;no spikes&quot;, &quot;spikes&quot;))%&gt;%
-  select(code.pat, dx.dicho, les.epi, EEG.result_resume, veille.sommeil)
-
-# P of being epileptic without other information
-data_tree_RF%&gt;%
-  group_by(dx.dicho)%&gt;%
-  summarise(N = n())</code></pre>
-<pre><code>## # A tibble: 2 x 2
-##   dx.dicho          N
-##   &lt;chr&gt;         &lt;int&gt;
-## 1 epileptic       275
-## 2 non-epileptic   268</code></pre>
-<pre class="r"><code># P of being epileptic given MRI results
-data_tree_RF%&gt;%
-  group_by(les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 3
-## # Groups:   les.epi [1]
-##   les.epi                 dx.dicho          N
-##   &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 no epileptogenic lesion epileptic        58
-## 2 no epileptogenic lesion non-epileptic   190</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 3
-## # Groups:   les.epi [1]
-##   les.epi              dx.dicho          N
-##   &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 epileptogenic lesion epileptic       217
-## 2 epileptogenic lesion non-epileptic    78</code></pre>
-<pre class="r"><code># P of being epileptic given MRI and std EEG results
-data_tree_RF%&gt;%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 4
-## # Groups:   EEG.result_resume, les.epi [1]
-##   EEG.result_resume les.epi                 dx.dicho          N
-##   &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 no spikes         no epileptogenic lesion epileptic        33
-## 2 no spikes         no epileptogenic lesion non-epileptic   177</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 4
-## # Groups:   EEG.result_resume, les.epi [1]
-##   EEG.result_resume les.epi                 dx.dicho          N
-##   &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 spikes            no epileptogenic lesion epileptic        25
-## 2 spikes            no epileptogenic lesion non-epileptic    13</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 4
-## # Groups:   EEG.result_resume, les.epi [1]
-##   EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 no spikes         epileptogenic lesion epileptic       165
-## 2 no spikes         epileptogenic lesion non-epileptic    75</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 4
-## # Groups:   EEG.result_resume, les.epi [1]
-##   EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 spikes            epileptogenic lesion epileptic        52
-## 2 spikes            epileptogenic lesion non-epileptic     3</code></pre>
-<pre class="r"><code># P of being epileptic given MRI, std EEG results and time of the event
-
-data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;, veille.sommeil == &quot;veille&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi                 dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 veille         no spikes         no epileptogenic lesion epileptic        25
-## 2 veille         no spikes         no epileptogenic lesion non-epileptic   162</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;, veille.sommeil == &quot;sommeil&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi                 dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 sommeil        no spikes         no epileptogenic lesion epileptic         8
-## 2 sommeil        no spikes         no epileptogenic lesion non-epileptic    15</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;, veille.sommeil == &quot;veille&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi                 dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;         &lt;int&gt;
-## 1 veille         spikes            no epileptogenic lesion epileptic        22
-## 2 veille         spikes            no epileptogenic lesion non-epileptic    13</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;, veille.sommeil == &quot;sommeil&quot;)</code></pre>
-<pre><code>## # A tibble: 1 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi                 dx.dicho      N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                   &lt;chr&gt;     &lt;int&gt;
-## 1 sommeil        spikes            no epileptogenic lesion epileptic     3</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;, veille.sommeil == &quot;veille&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 veille         no spikes         epileptogenic lesion epileptic       146
-## 2 veille         no spikes         epileptogenic lesion non-epileptic    70</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;no spikes&quot;, veille.sommeil == &quot;sommeil&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 sommeil        no spikes         epileptogenic lesion epileptic        19
-## 2 sommeil        no spikes         epileptogenic lesion non-epileptic     5</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;, veille.sommeil == &quot;veille&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 veille         spikes            epileptogenic lesion epileptic        47
-## 2 veille         spikes            epileptogenic lesion non-epileptic     2</code></pre>
-<pre class="r"><code>data_tree_RF%&gt;%
-  group_by(veille.sommeil, EEG.result_resume, les.epi, dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;epileptogenic lesion&quot;, EEG.result_resume == &quot;spikes&quot;, veille.sommeil == &quot;sommeil&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   veille.sommeil, EEG.result_resume, les.epi [1]
-##   veille.sommeil EEG.result_resume les.epi              dx.dicho          N
-##   &lt;chr&gt;          &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;         &lt;int&gt;
-## 1 sommeil        spikes            epileptogenic lesion epileptic         5
-## 2 sommeil        spikes            epileptogenic lesion non-epileptic     1</code></pre>
-<p><strong>END Probability tree based on the three best factors explained by the model</strong></p>
 </div>
-<div id="yield-of-the-lt-eeg-in-the-diagnosis-of-epilepsy" class="section level3">
-<h3>Yield of the LT EEG in the diagnosis of epilepsy</h3>
-<pre class="r"><code># Data importation 
-data_RF_outcome_single_tree_LT(data_full_cleaned)
-
-# prediction on all variable except LT EEG
-data_RF_wo_LT &lt;- data_RF%&gt;%
-  select(-lt_eeg)
-data_RF_train_wo_LT &lt;- data_RF_train%&gt;%
-  select(-lt_eeg)
-data_RF_test_wo_LT &lt;- data_RF_test%&gt;%
-  select(-lt_eeg)
-
-# Model without the LT EEG
-model_wo_LT &lt;- randomForest(res.dx.final ~ ., data = data_RF_train_wo_LT, ntree = 2000)
-prediction_wo_LT &lt;- predict(model_wo_LT, newdata = data_RF_test_wo_LT, type = &quot;class&quot;)
-conf_mat_wo_LT &lt;- table(prediction_wo_LT, labels_final_test_RF)
-acc_wo_lt &lt;- round(mean(prediction_wo_LT == labels_final_test_RF),4)*100
-
-gini_wo_LT &lt;- importance(model_wo_LT)
-gini_wo_LT &lt;- data.frame(rownames(gini_wo_LT), gini_wo_LT)
-gini_wo_LT$MeanDecreaseGini &lt;- round(gini_wo_LT$MeanDecreaseGini,2) 
-gini_wo_LT &lt;- arrange(gini_wo_LT,desc(MeanDecreaseGini))
-
-# Model with the LT EEG
-model_w_LT &lt;- randomForest(res.dx.final ~ ., data = data_RF_train, ntree = 2000)
-prediction_w_LT &lt;- predict(model_w_LT, newdata = data_RF_test, type = &quot;class&quot;)
-conf_mat_w_LT &lt;- table(prediction_w_LT, labels_final_test_RF)
-acc_w_lt &lt;- round(mean(prediction_w_LT == labels_final_test_RF),4)*100
-
-gini_w_LT &lt;- importance(model_w_LT)
-gini_w_LT &lt;- data.frame(rownames(gini_w_LT), gini_w_LT)
-gini_w_LT$MeanDecreaseGini &lt;- round(gini_w_LT$MeanDecreaseGini,2) 
-gini_w_LT &lt;- arrange(gini_w_LT,desc(MeanDecreaseGini))</code></pre>
-<p>To overcome this difficulty, we proposed to include the same patients as for the first predictive model, but filtering only patients with a LT EEG (N = 139).</p>
-<table>
-<thead>
-<tr class="header">
-<th align="left">rownames.gini_wo_LT.</th>
-<th align="right">MeanDecreaseGini</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">std_eeg</td>
-<td align="right">3.72</td>
-</tr>
-<tr class="even">
-<td align="left">veille.sommeil</td>
-<td align="right">2.80</td>
-</tr>
-<tr class="odd">
-<td align="left">les.epi</td>
-<td align="right">2.16</td>
-</tr>
-<tr class="even">
-<td align="left">genre</td>
-<td align="right">1.90</td>
-</tr>
-<tr class="odd">
-<td align="left">age</td>
-<td align="right">1.64</td>
-</tr>
-<tr class="even">
-<td align="left">atcd.famille</td>
-<td align="right">1.42</td>
-</tr>
-<tr class="odd">
-<td align="left">status.neuro</td>
-<td align="right">1.14</td>
-</tr>
-</tbody>
-</table>
-<table>
-<thead>
-<tr class="header">
-<th align="left">rownames.gini_w_LT.</th>
-<th align="right">MeanDecreaseGini</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">lt_eeg</td>
-<td align="right">12.74</td>
-</tr>
-<tr class="even">
-<td align="left">les.epi</td>
-<td align="right">2.57</td>
-</tr>
-<tr class="odd">
-<td align="left">std_eeg</td>
-<td align="right">2.37</td>
-</tr>
-<tr class="even">
-<td align="left">veille.sommeil</td>
-<td align="right">2.25</td>
-</tr>
-<tr class="odd">
-<td align="left">genre</td>
-<td align="right">1.78</td>
-</tr>
-<tr class="even">
-<td align="left">age</td>
-<td align="right">1.22</td>
-</tr>
-<tr class="odd">
-<td align="left">atcd.famille</td>
-<td align="right">1.08</td>
-</tr>
-<tr class="even">
-<td align="left">status.neuro</td>
-<td align="right">1.05</td>
-</tr>
-</tbody>
-</table>
-<p><em>Table 9: Mean Decrease Gini of two Random Forest algorithms. The first one does not include the results of the LT EEG as a predictor while the second one does.</em></p>
-<p>The accuracy of the model which did not include the results of the LT EEG among the predictors is 48.57%. The model including the LT EEG results performed much better, with an accuracy rate of 65.71%, which suggests an impressive yield in the predictive abilities of the model by 17.14%.</p>
-<p>A REGARDER DEMAIN AVEC LES IDEES CLAIRES</p>
-<pre class="r"><code>temp &lt;- data_full_cleaned%&gt;%
-  filter(pointes.1st.EEG != &quot;focale&quot; &amp; pointes.1st.EEG != &quot;diffuse&quot; &amp; res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(pointes.lt.EEG != &quot;focale&quot; &amp; pointes.lt.EEG != &quot;diffuse&quot; &amp; res.lt.EEG != &quot;aucun&quot; &amp; res.lt.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(les.epi == &quot;normal&quot; | les.epi == &quot;lesion non epileptogene&quot;)%&gt;%
-  filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)
-
-data_full_cleaned%&gt;%filter(res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(EEG.result_resume == &quot;slow&quot; | is.na(EEG.result_resume))%&gt;%
-  filter(res.lt.EEG != &quot;aucun&quot; &amp; res.lt.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(EEG.lt.result_resume == &quot;slow&quot; | is.na(EEG.lt.result_resume))%&gt;%
-  filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)%&gt;%
-  filter(les.epi != &quot;lesion epileptogene&quot;)%&gt;%
-  select(pointes.1st.EEG, pointes.lt.EEG, res.IRM, les.epi)%&gt;%
-  filter(les.epi == &quot;douteux&quot;)</code></pre>
-<pre><code>## # A tibble: 15 x 4
-##    pointes.1st.EEG pointes.lt.EEG res.IRM les.epi
-##    &lt;chr&gt;           &lt;chr&gt;          &lt;chr&gt;   &lt;chr&gt;  
-##  1 aucune          aucune         anormal douteux
-##  2 aucune          aucune         normal  douteux
-##  3 aucune          aucune         anormal douteux
-##  4 aucune          aucune         anormal douteux
-##  5 aucune          aucune         anormal douteux
-##  6 aucune          aucune         anormal douteux
-##  7 aucune          aucune         anormal douteux
-##  8 aucune          aucune         anormal douteux
-##  9 aucune          aucune         anormal douteux
-## 10 aucune          aucune         anormal douteux
-## 11 aucune          aucune         anormal douteux
-## 12 aucune          aucune         anormal douteux
-## 13 aucune          aucune         anormal douteux
-## 14 aucune          aucune         anormal douteux
-## 15 aucune          aucune         anormal douteux</code></pre>
-<pre class="r"><code>data_tree_exams &lt;- data_full_cleaned%&gt;%
-  filter(res.IRM != &quot;aucun&quot; &amp; res.IRM != &quot;aucun mais propose&quot;)%&gt;%
-  filter(res.1st.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(res.lt.EEG != &quot;aucun&quot; &amp; res.1st.EEG != &quot;aucun mais propose&quot;)%&gt;%
-  filter(les.epi != &quot;douteux&quot;)%&gt;%
+<div id="estimation-of-the-yield-of-lt-eeg-over-stndard-eeg" class="section level3">
+<h3>Estimation of the yield of LT-EEG over stndard EEG</h3>
+<pre class="r"><code>data_LT_over_std &lt;- data_full_cleaned%&gt;%
   mutate(dx.dicho = ifelse(dx.event != &quot;Epilepsy&quot; | is.na(dx.event), &quot;non-epileptic&quot;, &quot;epileptic&quot;),
-         les.epi = ifelse(les.epi == &quot;lesion epileptogene&quot;, &quot;epileptogenic lesion&quot;, &quot;no epileptogenic lesion&quot;),
-         EEG.result_resume = ifelse(is.na(EEG.result_resume) | EEG.result_resume == &quot;slow&quot;, &quot;no spikes&quot;, &quot;spikes&quot;),
-         EEG.lt.result_resume = ifelse(is.na(EEG.lt.result_resume) | EEG.lt.result_resume == &quot;slow&quot;, &quot;no spikes&quot;, &quot;spikes&quot;))%&gt;%
-  select(code.pat, dx.dicho, les.epi, EEG.result_resume, EEG.lt.result_resume, pointes.1st.EEG, pointes.lt.EEG, dx.event)
+         EEG = case_when(!is.na(EEG.result_resume) ~ EEG.result_resume,
+                         res.1st.EEG == &quot;aucun&quot; | res.1st.EEG == &quot;aucun mais propose&quot; ~ &quot;aucun&quot;,
+                         TRUE ~ &quot;normal&quot;),
+         les.epi = ifelse(les.epi == &quot;aucun&quot;, NA, les.epi),
+         status.neuro = ifelse(status.neuro == &quot;aucun&quot; | status.neuro == &quot;aucun mais propose&quot;, NA, status.neuro),
+         veille.sommeil = ifelse(veille.sommeil == &quot;non documente&quot;, NA, veille.sommeil),
+         EEG = ifelse(EEG == &quot;aucun&quot;, NA, EEG),
+         atcd.famille = ifelse(atcd.famille == &quot;aucun/autre&quot;, &quot;aucun&quot;, atcd.famille),
+         EEG_LT = case_when(!is.na(EEG.lt.result_resume) ~ EEG.lt.result_resume,
+                            res.lt.EEG == &quot;aucun&quot; | res.lt.EEG == &quot;aucun mais propose&quot; ~ &quot;aucun&quot;,
+                            TRUE ~ &quot;normal&quot;),
+         dx.dicho = as.factor(dx.dicho),
+         genre = as.factor(genre),
+         atcd.famille = as.factor(atcd.famille),
+         EEG = as.factor(EEG),
+         les.epi = as.factor(les.epi),
+         status.neuro = as.factor(status.neuro),
+         veille.sommeil = as.factor(veille.sommeil))%&gt;%
+  filter(res.lt.EEG != &quot;aucun&quot;, res.lt.EEG != &quot;aucun mais propose&quot;)%&gt;%
+  select(code.pat, dx.dicho, EEG_LT, age, genre, atcd.famille, EEG, les.epi, status.neuro, veille.sommeil)
 
-data_tree_exams%&gt;%
-  group_by(EEG.lt.result_resume, EEG.result_resume, les.epi,dx.dicho)%&gt;%
-  summarise(N = n())%&gt;%
-  filter(les.epi == &quot;no epileptogenic lesion&quot; &amp; EEG.result_resume == &quot;no spikes&quot; &amp; EEG.lt.result_resume == &quot;no spikes&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 5
-## # Groups:   EEG.lt.result_resume, EEG.result_resume, les.epi [1]
-##   EEG.lt.result_resume EEG.result_resume les.epi              dx.dicho         N
-##   &lt;chr&gt;                &lt;chr&gt;             &lt;chr&gt;                &lt;chr&gt;        &lt;int&gt;
-## 1 no spikes            no spikes         no epileptogenic le~ epileptic        8
-## 2 no spikes            no spikes         no epileptogenic le~ non-epilept~    77</code></pre>
+
+# Logistic regression model with the LT EEG information
+
+mod_w_LT &lt;- glm(dx.dicho ~ EEG_LT + age + genre + atcd.famille + EEG + les.epi + status.neuro + veille.sommeil, family = &quot;binomial&quot;, data = data_LT_over_std)
+
+
+# Results table
+
+Anova_reg_log_LT &lt;- as.data.frame(Anova(mod_w_LT))
+anova_reg_log_LT &lt;- as.data.frame(anova(mod_w_LT))
+anova_reg_log_LT &lt;- anova_reg_log_LT[2:nrow(anova_reg_log_LT),]
+
+res_reg_log_LT &lt;- cbind(anova_reg_log_LT, Anova_reg_log_LT)
+res_reg_log_LT &lt;- res_reg_log_LT[,-6]
+res_reg_log_LT$Predictor &lt;- row.names(res_reg_log_LT)
+res_reg_log_LT &lt;- res_reg_log_LT%&gt;%
+  arrange(desc(Deviance))%&gt;%
+  mutate(Deviance = round(Deviance, 2),
+         `Resid. Dev` = round(`Resid. Dev`,2),
+         `LR Chisq` = round(`LR Chisq`,2),
+         `Pr(&gt;Chisq)` = round(`Pr(&gt;Chisq)`, 3),
+         `Pr(&gt;Chisq)` = ifelse(`Pr(&gt;Chisq)` &lt; 0.001, &quot;&lt;0.001&quot;, `Pr(&gt;Chisq)`))%&gt;%
+  select(Predictor, Df, Deviance, `Resid. Df`, `Resid. Dev`, `LR Chisq`, `Pr(&gt;Chisq)`)</code></pre>
+<p>A second logistic regression model aimed at assessing the relevance of the overnight EEG. For this analysis, only patients with a standard and LT-EEG were retained (N = 239). The same predictors as the previous model were enterd, adding the LT-EEG information (spikes/slow/spikes and slow/ normal). As shown in Table X, in this particular pool of patients LT-EEG appeard to be the main predictor of the diagnosis, much better than the presence of an epileptogenic lesion. Moreover, only these two parameters appeard to be significantly contributing to the patients diagnosis prediction.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Predictor</th>
+<th align="right">Df</th>
+<th align="right">Deviance</th>
+<th align="right">Resid. Df</th>
+<th align="right">Resid. Dev</th>
+<th align="right">LR Chisq</th>
+<th align="left">Pr(&gt;Chisq)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">EEG_LT</td>
+<td align="right">3</td>
+<td align="right">75.61</td>
+<td align="right">198</td>
+<td align="right">202.02</td>
+<td align="right">64.02</td>
+<td align="left">&lt;0.001</td>
+</tr>
+<tr class="even">
+<td align="left">les.epi</td>
+<td align="right">3</td>
+<td align="right">16.82</td>
+<td align="right">188</td>
+<td align="right">179.30</td>
+<td align="right">18.27</td>
+<td align="left">&lt;0.001</td>
+</tr>
+<tr class="odd">
+<td align="left">veille.sommeil</td>
+<td align="right">1</td>
+<td align="right">2.85</td>
+<td align="right">185</td>
+<td align="right">174.73</td>
+<td align="right">2.85</td>
+<td align="left">0.091</td>
+</tr>
+<tr class="even">
+<td align="left">atcd.famille</td>
+<td align="right">2</td>
+<td align="right">2.40</td>
+<td align="right">194</td>
+<td align="right">198.45</td>
+<td align="right">2.46</td>
+<td align="left">0.292</td>
+</tr>
+<tr class="odd">
+<td align="left">EEG</td>
+<td align="right">3</td>
+<td align="right">2.33</td>
+<td align="right">191</td>
+<td align="right">196.12</td>
+<td align="right">1.65</td>
+<td align="left">0.648</td>
+</tr>
+<tr class="even">
+<td align="left">status.neuro</td>
+<td align="right">2</td>
+<td align="right">1.72</td>
+<td align="right">186</td>
+<td align="right">177.58</td>
+<td align="right">2.62</td>
+<td align="left">0.27</td>
+</tr>
+<tr class="odd">
+<td align="left">age</td>
+<td align="right">1</td>
+<td align="right">1.15</td>
+<td align="right">197</td>
+<td align="right">200.87</td>
+<td align="right">0.03</td>
+<td align="left">0.87</td>
+</tr>
+<tr class="even">
+<td align="left">genre</td>
+<td align="right">1</td>
+<td align="right">0.02</td>
+<td align="right">196</td>
+<td align="right">200.85</td>
+<td align="right">0.91</td>
+<td align="left">0.339</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
