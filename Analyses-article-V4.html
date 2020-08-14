@@ -409,6 +409,7 @@ summary {
 <li><a href="#estimation-of-the-yield-of-lt-eeg-over-stndard-eeg">Estimation of the yield of LT-EEG over stndard EEG</a></li>
 </ul></li>
 </ul></li>
+<li><a href="#main-messages">Main messages:</a></li>
 </ul>
 </div>
 
@@ -1141,7 +1142,7 @@ data_chi &lt;- as.data.frame(data_chi, row.names =rownames)
 data_chi &lt;- as.data.frame(data_chi, row.names =rownames)
 
 chi2_EEG_epi &lt;- chisq.test(data_chi, simulate.p.value = T)</code></pre>
-<p>In 122 epileptic patients (over 472 who underwent an EEG; 25.85%), the EEG showed epileptiform abnormalities, and in another 203 (43.01%) unspecific abnormalities were identified, leaving 147 (31.14%) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in 692 (76.21%) out of 908 patients for whom the timing information could be retrieved, the standard EEG was done within 24h. 5.95% (N = 54/908) of the EEG were realised between 24 and 48h, while 2.42% (N = 22/908) were done between 48h and 72h, and the reminder 15.42% (N = 140/908) after 72h. There was no difference in the occurrence of epileptiform abnormalities between the different delays for the whole group (X2 = 8.16; p = 0.093) or for the group of epileptic patients taken separately (X2 = 6.13; p = 0.194).</p>
+<p>In 122 epileptic patients (over 472 who underwent an EEG; 25.85%), the EEG showed epileptiform abnormalities, and in another 203 (43.01%) unspecific abnormalities were identified, leaving 147 (31.14%) with a completely normal EEG. While we aimed at carrying out the EEG within 24h, this was not always possible. Among all diagnoses, in 692 (76.21%) out of 908 patients for whom the timing information could be retrieved, the standard EEG was done within 24h. 5.95% (N = 54/908) of the EEG were realised between 24 and 48h, while 2.42% (N = 22/908) were done between 48h and 72h, and the reminder 15.42% (N = 140/908) after 72h. There was no difference in the occurrence of epileptiform abnormalities between the different delays for the whole group (X2 = 8.16; p = 0.084) or for the group of epileptic patients taken separately (X2 = 6.13; p = 0.189).</p>
 <pre class="r"><code>temp &lt;- data_full_cleaned%&gt;%filter(dx.event != &quot;Epilepsy&quot; | is.na(dx.event))%&gt;%
   filter(EEG.result_resume == &quot;pointes&quot; | EEG.result_resume == &quot;pointes+slow&quot;)%&gt;%
   group_by(dx.general, dx.event, dx.epi)%&gt;%
@@ -1687,7 +1688,7 @@ chi_dead &lt;- chisq.test(datachi) </code></pre>
 </div>
 <div id="relapses" class="section level2">
 <h2>Relapses</h2>
-<p>Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Among all patients, 245 (24.23%) relapsed. The proportion is significantly higher for epileptic patients (N = 162/475; 34.11%), compared to non epileptic patients (N = 83/536; 15.49%; X2 = 46.54; p&lt;0.001). Among epileptic patients, focal epilepsy patients (N = 153/444; 34.46%) tend to relapse more than generalized epilepsy patients (N = 9/31; 29.03%), however, this difference did not reached significance (X2 = 0.18; p = 0.674). Inside the focal epilepsy group, patient with non lesional epilepsy (N = 32/60 ; 53.33%) are significantly most prone to relapse compared to lesional patients (N = 121/384; 31.51%; X2 = 10; p = 0.002). Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (N = 5/17; 29.41%), however, this difference did not reach significance either (X2 = 1.62; p = 0.203). See Table X for a complete description of the relapse rate per diagnosis.</p>
+<p>Relapse was defined for not epileptic patients as a new consultation in the ED or a written trace of a new event in a medical report of any specialities for similar motives as the ones of the first event. Regarding epileptic patients, only epileptic seizures were taken into account. Among all patients, 245 (24.23%) relapsed. The proportion is significantly higher for epileptic patients (N = 162/475; 34.11%), compared to non epileptic patients (N = 83/536; 15.49%; X2 = 46.54; p&lt;0.001). Among epileptic patients, focal epilepsy patients (N = 153/444; 34.46%) tend to relapse more than generalized epilepsy patients (N = 9/31; 29.03%), however, this difference did not reach significance (X2 = 0.18; p = 0.674). Inside the focal epilepsy group, patient with non lesional epilepsy (N = 32/60 ; 53.33%) are significantly most prone to relapse compared to lesional patients (N = 121/384; 31.51%; X2 = 10; p = 0.002). Regarding the non-epileptic groups, cardiac patients has the highest relapse rate compared to the other non-epileptic groups (N = 5/17; 29.41%), however, this difference did not reach significance either (X2 = 1.62; p = 0.203). See Table X for a complete description of the relapse rate per diagnosis.</p>
 <table>
 <thead>
 <tr class="header">
@@ -1802,6 +1803,7 @@ chi_dead &lt;- chisq.test(datachi) </code></pre>
 </tr>
 </tbody>
 </table>
+<p><em>Table X: detailed description of the relapses experienced groupped by diagnosis.</em></p>
 <pre class="r"><code># Table of the reason of relapse among the epileptic patients
 N_epi &lt;- nrow(data_full_cleaned%&gt;%filter(dx.event == &quot;Epilepsy&quot;))
 
@@ -1821,7 +1823,7 @@ type_relapse_table &lt;- data_full_cleaned%&gt;%
 N_acute &lt;- 4
 OH &lt;- 2
 sevr_ttt &lt;- 2</code></pre>
-<p>Among epileptic patients, we investigated the origin of the first relapse following the first seizure (or the index event in case of non-investigated anterior seizures). As shown in Table X, Results indicate that most commonly, patients relapsed despite an adequate treatment and no compliance problems were reported (N = 56/475; 11.79). Nevertheless, a non negligeable part of the patients seem to relapse during the interval a treatment was instaurated, or refused the prescription of an antiepileptic drug (N = 43/475; 9.05). This stresses again the importance to investigate these patients as swiftly as possible. Interestingly, four patients first presented a non-provoked seizure leading to the diagnosis of epilepsy and and a second one considered as an acute symptomatic seizure. This is particularly the case for patients with alcohool addiction problems (2/4) and drugs withdrawal, such as benzodiazepines (2/4).</p>
+<p>Among epileptic patients, we investigated the origin of the first relapse following the first seizure (or the index event in case of non-investigated anterior seizures). As shown in Table X, Results indicate that most commonly, patients relapsed despite an adequate treatment and no compliance problems were reported (N = 56/475; 11.79%). Nevertheless, a non negligeable part of the patients seem to relapse during the interval a treatment was instaurated, or refused the prescription of an antiepileptic drug (N = 43/475; 9.05%). This stresses again the importance to investigate these patients as swiftly as possible. Interestingly, four patients first presented a non-provoked seizure leading to the diagnosis of epilepsy and and a second one considered as an acute symptomatic seizure. This is particularly the case for patients with alcohool addiction problems (2/4) and drugs withdrawal, such as benzodiazepines (2/4).</p>
 <table>
 <thead>
 <tr class="header">
@@ -1984,6 +1986,7 @@ res_reg_log &lt;- res_reg_log%&gt;%
 </tr>
 </tbody>
 </table>
+<p><em>Table X: results table of the logistic regression model investigating the effect of each variable on the ability to predict the diagnosis. Factors are arranged by deviance.</em></p>
 </div>
 <div id="estimation-of-the-yield-of-lt-eeg-over-stndard-eeg" class="section level3">
 <h3>Estimation of the yield of LT-EEG over stndard EEG</h3>
@@ -2121,8 +2124,27 @@ res_reg_log_LT &lt;- res_reg_log_LT%&gt;%
 </tr>
 </tbody>
 </table>
+<p><em>Table X: results of the logistic regression model including the LT-EEG information as predictor of the diagnosis. Factors are arranged by deviance.</em></p>
 </div>
 </div>
+</div>
+<div id="main-messages" class="section level1">
+<h1>Main messages:</h1>
+<ul>
+<li>Patients admitted in the ED for a suspicion of epileptic seizure often don’t have epileptic seizure.</li>
+<li>Among the pathologies that mimmick epilepsy, the majority are very diversed, but cardiovascular events, PNES and vaso-vagal syncopes represent 55% of the cases. The other are less strongly characterized.</li>
+<li>Lesional epilepsy is the most common etiology, and these patients are older than the non-lesional as well as the IGE patients.</li>
+<li>EEG showed epileptiform abnormalities in 26% of the cases. In 43% of the cases, unspecific abnormalities were reported, and 31% of the EEG of epileptic patients remained totally normal.</li>
+<li>The results do not suggest that the delay between the first seizure and the realization of the EEG plays a role in the detection of epileptiform abnormalities.</li>
+<li>LT-EEG increases the chances to see epileptiform abnormalities since 50% of the patients with a normal standard EEG and who were finally diagnosed with epilepsy showed epileptiform abnormalities on the LT-EEG. Moreover, in difficult patients (i.e. who do not show epileptiform abnormalities on the standard EEG or the semiology is not suggestive), a LT-EEG was proposed. Results show that for these patients, the LT-EEG was the best predictor of the diagnosis, even above the presence of an epileptogenic lesion, shown as the best predictor by the previous model. These results confirm its interest in the diagnosis of epileptic patients.</li>
+<li>Still 10% of the patients were diagnosed with epilepsy despite all normal exams.</li>
+<li>As shown previously, MRI shows a yield compared to CT.</li>
+<li>Non-epileptic patients seem to recieve their fianl diagnosis later than epileptic patients. Since the delay between the first event and the diagnosis tends to play a role on the relapses a patient might experience, this finding seems very important, especially for cardiac and cardiovascular patients who relapse the most after the first event. This stresses the importance of having a cardiologist in the emergency workup team of first seizure clinic. -Mortality is increased at 2 years for epileptic compared to non-epileptic patients.</li>
+<li>Epileptic patients tend to relapse more than non-epileptic patients</li>
+<li>Among epileptic patients, the non-lesional epilepsies tend to relapse more than the lesional epilepsy and IGE groups.</li>
+<li>Among epileptic patients, almost half of the patients who relapsed were properly treated, but arround 26% of the patients either refused the treatment or were not properly followed.Arround 17% of the patients encounterd compliance problems.</li>
+<li>Variables that contribute the most to the diagnosis were the presence of an epileptogenic lesion (due to the large number of lesional epilepsies and the low sensitivity of the EEG), then the EEG is the second better predictive factor. Other elements such as the gender, if the event occured during the night or the dayor the age of the patient contributed to the diagnosis. Other information such as the status neuro or a positive family history did not.</li>
+</ul>
 </div>
 
 
