@@ -1,0 +1,8 @@
+"0","##-----------------------------------------------------------------------"
+"0","##  Creation of the summary tables for each step of the diagnostic tree  "
+"0","##-----------------------------------------------------------------------"
+"0",""
+"0","# first step"
+"0",""
+"0","data_full_cleaned%>%"
+"0","  summarise(N = n(), age.pat = mean(age), sd = sd(age))"

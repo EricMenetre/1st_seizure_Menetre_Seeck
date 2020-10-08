@@ -1,0 +1,6 @@
+"0","nrow(data_full_cleaned%>%filter(dx.event != ""Epilepsy"" | is.na(dx.event)))
+"
+"1","[1]"
+"1"," 536"
+"1","
+"

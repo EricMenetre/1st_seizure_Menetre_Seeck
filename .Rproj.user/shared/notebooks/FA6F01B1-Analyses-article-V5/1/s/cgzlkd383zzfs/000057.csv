@@ -1,0 +1,5 @@
+"0",""
+"0",""
+"0","data_full_cleaned%>%"
+"0","  group_by(dx.event, dx.epi, genre)%>%"
+"0","  summarise(N = n(), age.pat = mean(age), sd = sd(age))"

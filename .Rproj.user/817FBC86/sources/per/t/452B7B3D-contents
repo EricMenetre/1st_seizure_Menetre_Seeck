@@ -1207,6 +1207,305 @@ data_full_cleaned$res.1st.EEG[data_full_cleaned$code.pat == "TE_TH_55"] <- "anor
 data_full_cleaned$dx.final[data_full_cleaned$code.pat == "GI_PI_62"] <- "crise epilepsie"
 data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "GI_PI_62"] <- "generalisee idiopathique"
 
+### Correction Pia
+
+# Transfer cardiac arrest under cardiac
+
+data_full_cleaned$dx.final[data_full_cleaned$type.cardiovasculaire == "ACR"] <- "origine cardiaque"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$type.cardiovasculaire == "ACR"] <- NA
+
+# Correction for patients who were classified as AVC (stroke)
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BO_SI_83"] <- "autres"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BO_SI_83"] <- NA
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "BO_SI_83"] <- "ECA"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "FR_CL_71"] <- "crise provoquee"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "FR_CL_71"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "CL_LO_37"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "CL_LO_37"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "GO_RI_80"] <- "autres"
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "GO_RI_80"] <- "tr. Sensitifs peripheriques"
+
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "RO_MA_96"] <- "AIT"
+
+# Reatribution of post-stroke symptoms definition
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "LU_MI_85"] <- "crise epilepsie"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "LU_MI_85"] <- "lesionnelle"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "LU_MI_85"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "HO_GU_71"] <- "autres"
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "HO_GU_71"] <- "Douleurs neurogènes d'origine centrale"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "HO_GU_71"] <- NA
+
+# Better characterisation of syncopes
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BE_RO_98"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BE_RO_98"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "WI_SE_54"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "WI_SE_54"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "GA_CA_59"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "GA_CA_59"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "OD_JE_82"] <- "autres"
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "OD_JE_82"] <- "indet non epi"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "OD_JE_82"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "PE_NI_67"] <- "crise epilepsie"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "PE_NI_67"] <- NA
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "PE_NI_67"] <- "lesionnelle"
+
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "ME_Be_92"] <- "AVC"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "FA_MA_71"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "FA_MA_71"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "MU_MA_57"] <- "autres"
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "MU_MA_57"] <- "syncope sur prise d'antalgique"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "MU_MA_57"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BA_MA_25"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BA_MA_25"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "FO_LE_84"] <- "crise epilepsie"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "FO_LE_84"] <- NA
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "FO_LE_84"] <- "lesionnelle"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BO_DA_32"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BO_DA_32"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "MA_AU_31"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "MA_AU_31"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "ZA_CH_71"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "ZA_CH_71"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "MO_OM_21"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "MO_OM_21"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "PE_Me_27"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "PE_Me_27"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "AG_RO_45"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "AG_RO_45"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "TH_TH_21"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "TH_TH_21"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "DA_DA_53"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "DA_DA_53"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "MO_OM_21"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "MO_OM_21"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "CL_PH_44"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "CL_PH_44"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "CA_CO_47"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "CA_CO_47"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "GE_LU_40"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "GE_LU_40"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "SA_BI_33"] <- "psychogene"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "SA_BI_33"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "PI_AN_41"] <- "psychogene"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "PI_AN_41"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BA_JE_48"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BA_JE_48"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BR_DO_39"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BR_DO_39"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "KR_CH_43"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "KR_CH_43"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "AB_YO_25"] <- "psychogene"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "AB_YO_25"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "ZU_GU_49"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "ZU_GU_49"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "ZA_NI_58"] <- "crise epilepsie"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "ZA_NI_58"] <- NA
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "ZA_NI_58"] <- "indetermine"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "HE_MA_54"] <- "psychogene"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "HE_MA_54"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "L'_MI_73"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "L'_MI_73"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BE_FR_47"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BE_FR_47"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "DA_SE_51"] <- "origine cardiaque"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "DA_SE_51"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "SW_CH_72"] <- "origine cardiaque"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "SW_CH_72"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "DE_GU_77"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "DE_GU_77"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "RO_ME_19"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "RO_ME_19"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "FE_AN_40"] <- "autres"
+data_full_cleaned$type.autre.final[data_full_cleaned$code.pat == "FE_AN_40"] <- "syncope sur anesthésie dentaire"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "FE_AN_40"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "BR_PA_21"] <- "psychogene"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "BR_PA_21"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "JO_GA_90"] <- "origine cardiaque"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "JO_GA_90"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "PO_AN_79"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "PO_AN_79"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "ST_YV_76"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "ST_YV_76"] <- NA
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "VU_BE_72"] <- "malaise vagal"
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "VU_BE_72"] <- NA
+
+# Question 4 and 5 all normal exams but dx = epilepsy
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "TU_AB_21"] <- "crise epilepsie"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "TU_AB_21"] <- "indetermine"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "LE_MA_72"] <- "crise epilepsie"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "LE_MA_72"] <- "non lesionnelle"
+
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "MA_JO_39_2"] <- "generalisee idiopathique"
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "PA_MO_70"] <- "crise epilepsie"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "PA_MO_70"] <- "non lesionnelle"
+
+# Question 6 all normal exams and diagnosed as epileptic 
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "DO_MI_19"] <- "non lesionnelle"
+
+data_full_cleaned$res.IRM[data_full_cleaned$code.pat == "AV_CI_25"] <- "anormal"
+data_full_cleaned$les.IRM[data_full_cleaned$code.pat == "AV_CI_25"] <- "autre"
+
+##### Check recidives Pia
+
+# Modifications patients list Pia 
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "GJ_ST_54"] <- "origine cardiovasculaire"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "GJ_ST_54"] <- NA
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "GJ_ST_54"] <- "AIT"
+
+data_full_cleaned$date.1st.1st.sz[data_full_cleaned$code.pat == "TS_AF_30"] <- as.Date("2015-11-22")
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "DE_LU_42"] <- "origine cardiovasculaire"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "DE_LU_42"] <- NA
+data_full_cleaned$type.cardiovasculaire[data_full_cleaned$code.pat == "DE_LU_42"] <- "AVC"
+
+data_full_cleaned$date.1st.1st.sz[data_full_cleaned$code.pat == "TE_TH_55"] <- as.Date("2015-11-04")
+
+data_full_cleaned$SBB.1[data_full_cleaned$code.pat == "CU_LA_38"] <- 2
+
+data_full_cleaned$date.1st.1st.sz[data_full_cleaned$code.pat == "TA_MA_52"] <- NA
+data_full_cleaned$date.1st.cs.su[data_full_cleaned$code.pat == "TA_MA_52"] <- as.Date("2010-03-19")
+data_full_cleaned$SBB.1[data_full_cleaned$code.pat == "TA_MA_52"] <- 3
+
+data_full_cleaned <- data_full_cleaned%>%filter(code.pat != "NU_LE_20")
+
+data_full_cleaned$date.1st.1st.sz[data_full_cleaned$code.pat == "TA_PE_32"] <- as.Date("2012-10-12")
+
+data_full_cleaned$dx.final[data_full_cleaned$code.pat == "AB_AK_39"] <- "crise provoquee"
+data_full_cleaned$type.epi.final[data_full_cleaned$code.pat == "AB_AK_39"] <- NA
+
+data_full_cleaned$date.1st.1st.sz[data_full_cleaned$code.pat == "JO_CL_72"] <- as.Date("2011-02-22")
+data_full_cleaned$date.1st.cs.su[data_full_cleaned$code.pat == "JO_CL_72"] <- as.Date("2011-02-22")
+
+library(readxl)
+check_relapses <- read_excel("check_relapses_Pia_final.xlsx")
+check_relapses <- check_relapses%>%
+  select(code_patient, motif_consultation, si_crise_specification, `commentaire/Date`)%>%
+  rename(code.pat = code_patient,
+         motif_relapse = motif_consultation,
+         detail_relapse = si_crise_specification,
+         commentaire_relapse = `commentaire/Date`)
+
+for(i in 1:nrow(check_relapses)){
+  if(is.na(check_relapses$commentaire_relapse[i])){
+    next
+  } else if(grepl("4", check_relapses$commentaire_relapse[i])){
+    check_relapses$commentaire_relapse[i] <- as.character(as.Date(as.numeric(check_relapses$commentaire_relapse[i]), origin = "1899-12-30"))
+  
+  }
+}
+
+data_full_cleaned <- data_full_cleaned%>%left_join(check_relapses, by = "code.pat")
+
+
+#### Table to send to Margitta once Pia finished to check patients
+data_full_cleaned%>%
+  filter(dx.event == "Epilepsy")%>%
+  mutate(motif_relapse = ifelse(is.na(motif_relapse), "pas de recidives trouvees", motif_relapse))%>%
+  group_by(motif_relapse, detail_relapse)%>%
+  summarise(N = n())%>%
+  rename(recidive_pas_recidive = motif_relapse,
+         detail_recidive = detail_relapse)
+
+data_full_cleaned$code.pat[data_full_cleaned$dx.final == "origine cardiovasculaire" & data_full_cleaned$type.cardiovasculaire == "origine cardiovasculaire"]
+
+data_full_cleaned%>%
+  group_by(dx.initial,dx.final, dx.event, type.cardiovasculaire)%>%
+  filter(dx.event == "Cardiovascular")%>%
+  summarise(N = n())
+
+data_full_cleaned%>%
+  filter(dx.event == "Cardiovascular")%>%
+  group_by(type.cardiovasculaire)%>%
+  summarise(N = n())
+
+check_relapses_2 <- read_excel("Rec_cause_indet_Pia14.07.20_ok.xlsx")
+
+check_relapses_2 <- check_relapses_2%>%
+  rename(motif_relapse = motif_consultation,
+         detail_relapse = si_crise_specification,
+         commentaire_relapse = `commentaire/Date`,
+         code.pat = code_patient)%>%
+  select(code.pat, motif_relapse, detail_relapse, commentaire_relapse)%>%
+  mutate(commentaire_relapse = as.character(commentaire_relapse))
+
+data_full_cleaned <- data_full_cleaned%>%left_join(check_relapses_2, by = "code.pat")%>%
+  mutate(motif_relapse.x = ifelse(!is.na(motif_relapse.y), motif_relapse.y, motif_relapse.x),
+         detail_relapse.x = ifelse(!is.na(detail_relapse.y), detail_relapse.y, detail_relapse.x),
+         commentaire_relapse.x = ifelse(!is.na(commentaire_relapse.y), commentaire_relapse.y, commentaire_relapse.x))%>%
+  rename(motif_relapse = motif_relapse.x,
+         detail_relapse = detail_relapse.x,
+         commentaire_relapse = commentaire_relapse.x)%>%
+  select(-motif_relapse.y, -detail_relapse.y, -commentaire_relapse.y)
+
+# Changing diagnoses
+
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "OT_FR_53"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "BE_MA_49"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "CL_PI_86"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "TR_KA_77"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "LO_AN_85"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "GU_AL_83_2"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "KA_AL_76"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "CA_SE_92"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "FR_MI_58"] <- "lesion epileptogene"
+data_full_cleaned$les.epi[data_full_cleaned$code.pat == "NI_PA_43"] <- "lesion epileptogene"
+
+
+
+###############################################################################
+################ Do not add corrections after this point ######################
+###############################################################################
 
 
 data_full_cleaned <- data_full_cleaned%>%
@@ -1274,3 +1573,6 @@ data_full_cleaned <- data_full_cleaned%>%
 #write_xlsx(data_full_cleaned, "data_analyses.xlsx")
 
 data_full_cleaned$res.1st.EEG[data_full_cleaned$res.1st.EEG == "aucun mais  propose"] <- "aucun mais propose"
+rm(check_relapses, check_relapses_2, i)
+
+

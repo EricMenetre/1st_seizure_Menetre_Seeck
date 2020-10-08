@@ -1,0 +1,2 @@
+"0","data_full_cleaned%>% group_by(genre)%>%"
+"0","  summarise(N = n(), age.pat = mean(age), sd = sd(age))"

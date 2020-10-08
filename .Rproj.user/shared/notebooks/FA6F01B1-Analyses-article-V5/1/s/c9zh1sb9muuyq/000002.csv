@@ -1,0 +1,4 @@
+"0","N_plus60_vaso <- nrow(data_full_cleaned%>%"
+"0","  filter(dx.event == ""Vaso-vagal and orthostatic syncopes"")%>%"
+"0","  filter(age > 60))"
+"0",""

@@ -1,0 +1,105 @@
+"0","library(dplyr)
+"
+"2","
+Attachement du package : ‘dplyr’
+
+"
+"2","The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+"
+"0","library(ggplot2)"
+"0","library(tidyr)"
+"0","library(writexl)"
+"0","library(emmeans)"
+"0","library(tidyr)"
+"0","library(lubridate)"
+"2","
+Attachement du package : ‘lubridate’
+
+"
+"2","The following object is masked from ‘package:base’:
+
+    date
+
+"
+"0","library(car)"
+"2","Le chargement a nécessité le package : carData
+"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"2","
+Attachement du package : ‘car’
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    recode
+
+"
+"0","library(knitr)"
+"0","library(randomForest)"
+"2","randomForest 4.6-14
+"
+"2","Type rfNews() to see new features/changes/bug fixes.
+"
+"2","
+Attachement du package : ‘randomForest’
+
+"
+"2","The following object is masked from ‘package:ggplot2’:
+
+    margin
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    combine
+
+"
+"0","library(ROCR)"
+"2","Le chargement a nécessité le package : gplots
+"
+"2","
+Attachement du package : ‘gplots’
+
+"
+"2","The following object is masked from ‘package:stats’:
+
+    lowess
+
+"
+"0","library(NPL) # from https://github.com/EricMenetre/NPL -> Follow instruction on the README regarding installation"
+"2","
+Attachement du package : ‘NPL’
+
+"
+"2","The following object is masked _by_ ‘.GlobalEnv’:
+
+    number_to_word
+
+"
+"0","library(survival)"
+"0","library(survminer)"
+"2","Le chargement a nécessité le package : ggpubr
+"
+"2","Le chargement a nécessité le package : magrittr
+"
+"2","
+Attachement du package : ‘magrittr’
+
+"
+"2","The following object is masked from ‘package:tidyr’:
+
+    extract
+
+"
+"0","library(car)"

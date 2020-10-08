@@ -1,0 +1,8 @@
+"0",""
+"0","nrow(data_full_cleaned%>%"
+"0","       filter(dx.event == ""Unknown"")%>%"
+"0","       filter(SBB.3 == 8 | SBB.3 == 3| !is.na(date.deces) | resident == FALSE))"
+"1","[1]"
+"1"," 24"
+"1","
+"

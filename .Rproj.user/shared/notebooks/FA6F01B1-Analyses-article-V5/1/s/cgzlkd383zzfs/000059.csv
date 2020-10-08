@@ -1,0 +1,6 @@
+"0",""
+"0","# Fifth step "
+"0",""
+"0","data_full_cleaned%>%"
+"0","  filter(type.epi.final == ""lesionnelle"")%>%"
+"0","  summarise(N = n(), age.pat = mean(age), sd = sd(age))"
